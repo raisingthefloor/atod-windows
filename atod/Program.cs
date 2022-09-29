@@ -16,6 +16,7 @@
 // * Consumer Electronics Association Foundation
 
 using atod;
+using atod.UI;
 using System;
 using System.Reflection;
 
@@ -50,6 +51,7 @@ if (commandLineArgs is not null)
 {
     if (commandLineArgs.Length > 1)
     {
+        // parse and process the first command-line argument (i.e. the command)
         var commandArg = commandLineArgs[1]!;
         switch (commandArg.ToUpperInvariant())
         {
@@ -60,26 +62,32 @@ if (commandLineArgs is not null)
                     string? applicationName;
                     if (commandLineArgs.Length > 2)
                     {
+                        // capture the application name					
                         applicationName = commandLineArgs[2];
 
                         string? fullPath = null;
                         if (commandLineArgs.Length > 3)
                         {
+                            // if (optionally) provided, capture the full path to the installer
                             fullPath = commandLineArgs[3];
+
+                            atodOperationAsNullable = AtodOperation.Install(applicationName, fullPath);
                         }
                         else
                         {
-                            // TODO: if not provided, search for the path to the installer (and remove this block of code)
+                            // TODO: if the full path was not specified, search for the path to the installer
                             Console.WriteLine("Sorry, path is required in the current implementation; automatic download will be added in a future release");
                             Console.WriteLine();
                             //
                             showInstallCommandHelp = true;
-                        }
 
-                        atodOperationAsNullable = AtodOperation.Install(applicationName, fullPath);
+                            // TODO: if we could successfully find the installer's full path, populate the atodOperationAsNullable here
+                            //atodOperationAsNullable = AtodOperation.Install(applicationName, fullPath);
+                        }
                     }
                     else
                     {
+                        // the application name was not provided; the command is incomplete					
                         Console.WriteLine("Application name was not provided.");
                         Console.WriteLine();
                         //
@@ -120,17 +128,22 @@ if (commandLineArgs is not null)
     }
     else
     {
+        // the command argument was missing (i.e. no parameters were passed to our application)
         showGeneralHelp = true;
     }
 }
 
 if (atodOperationAsNullable is null || showGeneralHelp == true)
 {
-    Console.WriteLine("Usage:");
-    Console.WriteLine("  atod <command> [arguments]");
+    Console.WriteLine("'atod' command-line utility installs/uninstalls applications.");
     Console.WriteLine();
-    Console.WriteLine("Commands:");
-    Console.WriteLine("  install        Install an application.");
+    Console.WriteLine("usage: atod <command> [arguments]");
+    Console.WriteLine();
+    Console.WriteLine("The following commands are available:");
+    Console.WriteLine("  install    Install an application.");
+    //Console.WriteLine("  settings   Configure settings for an installed application (requires account).");
+	// TODO: we need to determine if we automatically roll-back settings when an application is uninstalled (and if we should have a "revert settings" type of command)
+    //Console.WriteLine("  uninstall  Uninstall an application.");
     Console.WriteLine();
     return;
 }
@@ -138,16 +151,4 @@ if (atodOperationAsNullable is null || showGeneralHelp == true)
 // NOTE: at this point, we know we have a valid operation
 var atodOperation = atodOperationAsNullable!;
 
-// execute the operation
-//
-switch (atodOperation.Value)
-{
-    case AtodOperation.Values.Install:
-        {
-            Console.WriteLine("TODO: trigger installation...");
-        }
-        break;
-    default:
-        throw new NotImplementedException();
-}
 return;
