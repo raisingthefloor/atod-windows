@@ -14,4 +14,8 @@
     <PackageReference Include="Morphic.Core" Version="1.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AToD.Deployment.MSI\AToD.Deployment.MSI.csproj" />
+  </ItemGroup>
+
 </Project>

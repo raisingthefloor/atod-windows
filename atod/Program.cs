@@ -18,6 +18,8 @@
 using atod;
 using atod.UI;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 
 // print out program header
@@ -151,4 +153,84 @@ if (atodOperationAsNullable is null || showGeneralHelp == true)
 // NOTE: at this point, we know we have a valid operation
 var atodOperation = atodOperationAsNullable!;
 
+// execute the operation
+//
+switch (atodOperation.Value)
+{
+    case AtodOperation.Values.Install:
+        {
+            var progressBar = new ConsoleProgressBar()
+            {
+                Minimum = 0,
+                Maximum = 1.0,
+                Value = 0,
+                //
+                TrailingText = "Starting installation..."
+            };
+            progressBar.Show();
+
+            // NOTE: in the future, we'll attempt to download the package if the packagePath is not provided; for now the packagePath is always provided (i.e. not null) per our check in the args (above)
+            var packagePath = atodOperation.FullPath;
+            var commandLineSettings = new Dictionary<string, string>();
+
+            var windowsInstaller = new AToD.Deployment.MSI.WindowsInstaller();
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            int? lastProgressPercentAsWholeNumber = null;
+            char[] spinnerChars = new char[] { '/', '-', '\\', '|' };
+            int lastSpinnerCharIndex = 0;
+            //
+            long? elapsedMillisecondsAtLastProgressBarUpdate = null;
+            windowsInstaller.ProgressUpdate += (sender, args) =>
+            {
+                var percent = args.Percent;
+                if (percent != 0)
+                {
+                    var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+
+                    var percentAsWholeNumber = (int)(percent * 100);
+                    if (lastProgressPercentAsWholeNumber is null || lastProgressPercentAsWholeNumber.Value != percentAsWholeNumber)
+                    {
+                        progressBar.Value = percent;
+
+                        lastProgressPercentAsWholeNumber = percentAsWholeNumber;
+                    }
+
+                    const long MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES = 250;
+                    if (elapsedMillisecondsAtLastProgressBarUpdate is null || elapsedMilliseconds >= elapsedMillisecondsAtLastProgressBarUpdate.Value + MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES)
+                    {
+                        var spinnerCharIndex = (lastSpinnerCharIndex + 1) % spinnerChars.Length;
+                        progressBar.TrailingText = spinnerChars[spinnerCharIndex] + " Installing";
+                        lastSpinnerCharIndex = spinnerCharIndex;
+
+                        elapsedMillisecondsAtLastProgressBarUpdate = elapsedMilliseconds;
+                    }
+                }
+            };
+
+            var installResult = await windowsInstaller.InstallAsync(packagePath, commandLineSettings);
+            if (installResult.IsError == true)
+            {
+                progressBar.Hide();
+
+                Console.WriteLine("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX Installation Failed");
+                Console.WriteLine();
+                Console.WriteLine("Application could not be installed.");
+                Console.WriteLine("Error: " + installResult.Error!.Win32ErrorCode.ToString());
+                return;
+            }
+
+            // otherwise, we succeeded.
+            progressBar.Value = 1.0;
+            progressBar.TrailingText = "Installation complete";
+
+            Console.WriteLine(); // line-terminate the current progress bar, while leaving it SHOWING
+            Console.WriteLine();
+            Console.WriteLine("Application has been installed.");
+        }
+        break;
+    default:
+        throw new NotImplementedException();
+}
 return;
