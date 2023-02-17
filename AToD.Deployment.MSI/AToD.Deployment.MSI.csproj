@@ -3,10 +3,16 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
+    <Version>0.9</Version>
+    <Authors>Raising the Floor - US, Inc.</Authors>
+    <Company>Raising the Floor - US, Inc.</Company>
+    <Product>MSI Deployment library for AT on Demand </Product>
+    <Copyright>Copyright 2022-2023 Raising the Floor - US, Inc.</Copyright>
+    <RepositoryUrl>https://github.com/raisingthefloor/atod-msideployment-lib-cs</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Morphic.Core" Version="1.1.0" />
+    <PackageReference Include="Morphic.Core" Version="1.2.0" />
     <PackageReference Include="PInvoke.User32" Version="0.7.124" />
   </ItemGroup>
 
