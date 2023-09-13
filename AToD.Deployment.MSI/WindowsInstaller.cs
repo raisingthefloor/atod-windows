@@ -1,4 +1,4 @@
-﻿// Copyright 2022 Raising the Floor - US, Inc.
+﻿// Copyright 2022-2023 Raising the Floor - US, Inc.
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -141,11 +141,11 @@ public class WindowsInstaller
                     return MorphicResult.ErrorResult(InstallError.MonitoringHookFailedToInitialize(msiSetExternalUIRecordResult));
             }
 
+            // set up event handler loop
+            this.StartEventLoop();
+            //
             try
             {
-                // set up event handler loop
-                this.StartEventLoop();
-
                 // install the product (i.e. install the MSI)
                 var commandLineArgsBuilder = new StringBuilder();
                 foreach (var propertySetting in propertySettings)
