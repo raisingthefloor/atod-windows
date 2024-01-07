@@ -25,11 +25,17 @@ public record AtodOperation : MorphicAssociatedValueEnum<AtodOperation.Values>
     public enum Values
     {
         Install,
+#if DEBUG		
+        InstallMsi,
+#endif
         Uninstall,
     }
 
     // functions to create member instances
     public static AtodOperation Install(string applicationName, string? fullPath) => new(Values.Install) { ApplicationName = applicationName, FullPath = fullPath };
+#if DEBUG		
+    public static AtodOperation InstallMsi(string fullPath) => new(Values.InstallMsi) { FullPath = fullPath };
+#endif
     public static AtodOperation Uninstall(string applicationName) => new(Values.Uninstall) { ApplicationName = applicationName };
 
     // associated values
