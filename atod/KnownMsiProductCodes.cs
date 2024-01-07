@@ -1,4 +1,4 @@
-﻿// Copyright 2022-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2022 Raising the Floor - US, Inc.
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -15,35 +15,26 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace atod;
 
-public record AtodOperation : MorphicAssociatedValueEnum<AtodOperation.Values>
+internal struct KnownMsiProductCodes
 {
-    // enum members
-    public enum Values
+    public static readonly Guid READ_AND_WRITE = new Guid(0x355AB00F, 0x48E8, 0x474E, 0xAC, 0xC4, 0xD9, 0x17, 0xBA, 0xFA, 0x4D, 0x58); // {355AB00F-48E8-474E-ACC4-D917BAFA4D58}
+
+    public static Guid? TryFromProductName(string productName)
     {
-        Install,
-        Uninstall,
+        switch (productName.ToUpperInvariant())
+        {
+            case "READANDWRITE":
+                return KnownMsiProductCodes.READ_AND_WRITE;
+            default:
+                return null;
+        }
     }
-
-    // functions to create member instances
-    public static AtodOperation Install(string applicationName, string? fullPath) => new AtodOperation(Values.Install) { ApplicationName = applicationName, FullPath = fullPath };
-    public static AtodOperation Uninstall(string applicationName) => new AtodOperation(Values.Uninstall) { ApplicationName = applicationName };
-
-    // associated values
-    public string? ApplicationName { get; private set; }
-    public string? FullPath { get; private set; }
-
-    // verbatim required constructor implementation for MorphicAssociatedValueEnums
-    private AtodOperation(Values value) : base(value) { }
 }
-
-

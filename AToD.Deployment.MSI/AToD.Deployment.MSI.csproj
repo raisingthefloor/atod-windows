@@ -7,7 +7,7 @@
     <Authors>Raising the Floor - US, Inc.</Authors>
     <Company>Raising the Floor - US, Inc.</Company>
     <Product>MSI Deployment library for AT on Demand </Product>
-    <Copyright>Copyright 2022-2023 Raising the Floor - US, Inc.</Copyright>
+    <Copyright>Copyright 2022-2024 Raising the Floor - US, Inc.</Copyright>
     <RepositoryUrl>https://github.com/raisingthefloor/atod-msideployment-lib-cs</RepositoryUrl>
   </PropertyGroup>
 
