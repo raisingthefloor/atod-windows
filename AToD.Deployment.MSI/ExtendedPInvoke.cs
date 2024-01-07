@@ -133,6 +133,37 @@ internal struct ExtendedPInvoke
     [DllImport("msi.dll", CharSet = CharSet.Unicode)]
     internal static extern uint MsiInstallProduct([MarshalAs(UnmanagedType.LPWStr)] string szPackagePath, [MarshalAs(UnmanagedType.LPWStr)] string szCommandLine);
 
+    //
+
+    internal enum INSTALLLEVEL : int
+    {
+        INSTALLLEVEL_DEFAULT = 0,
+        INSTALLLEVEL_MINIMUM = 1,
+        INSTALLLEVEL_MAXIMUM = 0xFFFF,
+    }
+
+    internal enum INSTALLSTATE : int
+    {
+        INSTALLSTATE_NOTUSED = -7,
+        INSTALLSTATE_BADCONFIG = -6,
+        INSTALLSTATE_INCOMPLETE = -5,
+        INSTALLSTATE_SOURCEABSENT = -4,
+        INSTALLSTATE_MOREDATA = -3,
+        INSTALLSTATE_INVALIDARG = -2,
+        INSTALLSTATE_UNKNOWN = -1,
+        INSTALLSTATE_BROKEN = 0,
+        INSTALLSTATE_ADVERTISED = 1,
+        INSTALLSTATE_REMOVED = 1,
+        INSTALLSTATE_ABSENT = 2,
+        INSTALLSTATE_LOCAL = 3,
+        INSTALLSTATE_SOURCE = 4,
+        INSTALLSTATE_DEFAULT = 5,
+    }
+
+    // https://learn.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msiconfigureproductexw
+    [DllImport("msi.dll", CharSet = CharSet.Unicode)]
+    internal static extern uint MsiConfigureProductEx([MarshalAs(UnmanagedType.LPWStr)] string szProduct, int iInstallLevel, INSTALLSTATE eInstallState, [MarshalAs(UnmanagedType.LPWStr)] string szCommandLine);
+
     #endregion msi.h
 
 

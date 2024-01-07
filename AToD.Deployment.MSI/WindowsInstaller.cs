@@ -43,6 +43,11 @@ public class WindowsInstaller
 	//       in the future, we need to un-reference these at an appropriate time
     private static List<ExtendedPInvoke.INSTALLUI_HANDLER_RECORD> RetainedUIHandlerRecords = new();
 
+    public record InstallResult
+    {
+        public bool RebootRequired;
+    }
+    //
     public record InstallError : MorphicAssociatedValueEnum<InstallError.Values>
     {
         // enum members
@@ -65,7 +70,7 @@ public class WindowsInstaller
         private InstallError(Values value) : base(value) { }
     }
     //
-    public async Task<MorphicResult<MorphicUnit, InstallError>> InstallAsync(string packagePath, Dictionary<string, string> propertySettings, bool suppressUacPrompt = false)
+    public async Task<MorphicResult<InstallResult, InstallError>> InstallAsync(string packagePath, Dictionary<string, string> propertySettings, bool suppressUacPrompt = false)
     {
         /* Configure the Windows Installer APIs to run in silent mode (and allowing/disallowing UAC prompts as requested by the caller) */
 
@@ -163,13 +168,14 @@ public class WindowsInstaller
                     return ExtendedPInvoke.MsiInstallProduct(packagePath, commandLineArgs);
                 });
 
-                if (msiInstallProductResult == (uint)PInvoke.Win32ErrorCode.ERROR_SUCCESS)
+                switch (msiInstallProductResult)
                 {
-                    return MorphicResult.OkResult();
-                }
-                else
-                {
-                    return MorphicResult.ErrorResult(InstallError.Win32Error((uint)msiInstallProductResult));
+                    case (uint)PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                        return MorphicResult.OkResult(new InstallResult { RebootRequired = false });
+                    case (uint)PInvoke.Win32ErrorCode.ERROR_SUCCESS_REBOOT_REQUIRED:
+                        return MorphicResult.OkResult(new InstallResult { RebootRequired = true });
+                    default:
+                        return MorphicResult.ErrorResult(InstallError.Win32Error((uint)msiInstallProductResult));
                 }
             }
             finally
@@ -232,6 +238,179 @@ public class WindowsInstaller
 
     //
 
+    public async Task<MorphicResult<InstallResult, InstallError>> UninstallAsync(Guid productCode, Dictionary<string, string> propertySettings, bool suppressUacPrompt = false)
+    {
+        /* Configure the Windows Installer APIs to run in silent mode (and allowing/disallowing UAC prompts as requested by the caller) */
+
+        // as we are using the Windows Installer APIs in silent mode, we have no hWnd to serve as parent of the installer UI elements; a value of zero means "desktop hWnd"
+        var newInternalUIhWnd = IntPtr.Zero;
+        //
+        ExtendedPInvoke.INSTALLUILEVEL newInternalUILevel;
+        if (suppressUacPrompt == true)
+        {
+            // run installers silently and suppress any UAC prompts
+            newInternalUILevel = ExtendedPInvoke.INSTALLUILEVEL.INSTALLUILEVEL_NONE;
+        }
+        else
+        {
+            // allow the UAC prompt (if and where required), but otherwise run installers silently
+            newInternalUILevel = ExtendedPInvoke.INSTALLUILEVEL.INSTALLUILEVEL_NONE | ExtendedPInvoke.INSTALLUILEVEL.INSTALLUILEVEL_UACONLY;
+        }
+        //
+        // NOTE: we intentionally set the parent window to hWnd zero (desktop) instead of passing null; passing null might keep another parent hWnd which we set previously after msi.dll was loaded
+        // NOTE: as the uiHWnd parameter of MsiSetInternalUI changes the value we pass in, create a copy of our new internal UI hWnd to preserve its value (for future comparisons, etc.)
+        var internalUIhWnd = newInternalUIhWnd;
+        var previousUILevel = ExtendedPInvoke.MsiSetInternalUI(newInternalUILevel, ref internalUIhWnd);
+        // if the result is INSTALLUILEVEL_NOCHANGE, this means that we supplied an invalid installation level; this is not specific to a particular MSI file; treat this as a code error
+        if (previousUILevel == ExtendedPInvoke.INSTALLUILEVEL.INSTALLUILEVEL_NOCHANGE)
+        {
+            Debug.Assert(false, "Installation level was not changed; this indicates that the supplied installation level was invalid.");
+            return MorphicResult.ErrorResult(InstallError.SwitchToSilentInstallerModeFailed);
+        }
+        // NOTE: the internalUIhWnd parameter is set to the previous internal UI hWnd as part of the MsiSetInternalUI function call's work
+        var previousInternalUIhWnd = newInternalUIhWnd;
+
+        try
+        {
+            /* Configure the messages we want to capture using our external user interface handler; we'll also effectively suppress the MSI's UI by handling all the messages */
+
+            // see: https://learn.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msisetexternaluirecord
+            var messageFilter =
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_ACTIONDATA |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_ACTIONSTART |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_COMMONDATA |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_ERROR |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_FATALEXIT |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_FILESINUSE |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_INFO |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_INITIALIZE |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_INSTALLSTART |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_INSTALLEND |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_OUTOFDISKSPACE |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_PROGRESS |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_RESOLVESOURCE |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_RMFILESINUSE |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_SHOWDIALOG |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_TERMINATE |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_USER |
+                        (uint)ExtendedPInvoke.INSTALLLOGMODE.INSTALLLOGMODE_WARNING;
+            //
+            ExtendedPInvoke.INSTALLUI_HANDLER_RECORD? previousHandler;
+            // NOTE: we must create an instance of INSTALLUI_HANDLER_RECORD which points to our function (to prevent the PInvoke callback from getting garbage collected)
+            var installUIRecordHandler = new ExtendedPInvoke.INSTALLUI_HANDLER_RECORD(this.InstallUiRecordHandler);
+            WindowsInstaller.RetainedUIHandlerRecords.Add(installUIRecordHandler);
+            var msiSetExternalUIRecordResult = ExtendedPInvoke.MsiSetExternalUIRecord(installUIRecordHandler, messageFilter, IntPtr.Zero, out previousHandler);
+            switch (msiSetExternalUIRecordResult)
+            {
+                case (int)PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                    // success; proceed
+                    break;
+                case (int)PInvoke.Win32ErrorCode.ERROR_CALL_NOT_IMPLEMENTED:
+                    // we should not get this failure (as it would indicate that we were called from a custom action)
+                    return MorphicResult.ErrorResult(InstallError.MonitoringHookFailedToInitialize(msiSetExternalUIRecordResult));
+                default:
+                    // undocumented error result code
+                    Debug.Assert(false, "Unknown result: " + msiSetExternalUIRecordResult.ToString());
+                    return MorphicResult.ErrorResult(InstallError.MonitoringHookFailedToInitialize(msiSetExternalUIRecordResult));
+            }
+
+            // set up event handler loop
+            this.StartEventLoop();
+            //
+            try
+            {
+                // uninstall the product
+                var commandLineArgsBuilder = new StringBuilder();
+                foreach (var propertySetting in propertySettings)
+                {
+                    if (commandLineArgsBuilder.Length > 0)
+                    {
+                        commandLineArgsBuilder.Append(" ");
+                    }
+                    commandLineArgsBuilder.Append(propertySetting.Key + "=" + propertySetting.Value);
+                }
+                var commandLineArgs = commandLineArgsBuilder.ToString();
+                //
+                var msiConfigureProductResult = await Task.Run(() =>
+                {
+                    string productCodeAsString = productCode.ToString("B"); // format: {00000000-0000-0000-0000-000000000000}
+                    return ExtendedPInvoke.MsiConfigureProductEx(productCodeAsString, (int)ExtendedPInvoke.INSTALLLEVEL.INSTALLLEVEL_DEFAULT, ExtendedPInvoke.INSTALLSTATE.INSTALLSTATE_ABSENT, commandLineArgs);
+                });
+
+                switch (msiConfigureProductResult)
+                {
+                    case (uint)PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                        return MorphicResult.OkResult(new InstallResult { RebootRequired = false });
+                    case (uint)PInvoke.Win32ErrorCode.ERROR_SUCCESS_REBOOT_REQUIRED:
+                        return MorphicResult.OkResult(new InstallResult { RebootRequired = true });
+                    //case (uint)PInvoke.Win32ErrorCode.ERROR_INVALID_PARAMETER:
+                    //    // invalid parameter
+                    //    // NOTE: we handle this as a special case, just in case we want to handle it in the future
+                    //    return MorphicResult.ErrorResult(InstallError.Win32Error((uint)msiConfigureProductResult));
+                    default:
+                        return MorphicResult.ErrorResult(InstallError.Win32Error((uint)msiConfigureProductResult));
+                }
+            }
+            finally
+            {
+                // tear down event handler loop
+                this.StopEventLoop();
+
+                // restore the previous handler, passing in 0 as the message filter parameter (and disable our external UI record handler in the process)
+                // see: https://learn.microsoft.com/en-us/windows/win32/api/msi/nf-msi-msisetexternaluirecord
+                ExtendedPInvoke.INSTALLUI_HANDLER_RECORD? previousHandlerToRestore = previousHandler;
+                msiSetExternalUIRecordResult = ExtendedPInvoke.MsiSetExternalUIRecord(previousHandlerToRestore, 0, IntPtr.Zero, out previousHandler);
+                //
+                // verify that the external UI record handler was successfully disabled
+                switch (msiSetExternalUIRecordResult)
+                {
+                    case (int)PInvoke.Win32ErrorCode.ERROR_SUCCESS:
+                        // success; proceed
+                        break;
+                    case (int)PInvoke.Win32ErrorCode.ERROR_CALL_NOT_IMPLEMENTED:
+                        // we should not get this failure (as it would indicate that we were called from a custom action)
+                        Debug.Assert(false, "WARNING: MsiSetExternalUIRecord tried to disable the external message handler but received the error ERROR_CALL_NOT_IMPLEMENTED (which should only happen if we were calling from a custom action--which is not a supported scenario).");
+                        break;
+                    default:
+                        // undocumented error result code
+                        Debug.Assert(false, "WARNING: MsiSetExternalUIRecord tried to disable the external message handler but received the unknown error: " + msiSetExternalUIRecordResult.ToString());
+                        break;
+                }
+                //
+                // verify that the previous handler matches our current handler (NOTE: this isn't really critical; it's just a sanity check)
+                Debug.Assert(previousHandler == installUIRecordHandler, "WARNING: MsiSetExternalUIRecord disabled the external message handler, but the previous handler returned did not match our handler.");
+
+                // free our unmanaged callback (so that it can be garbage collected)
+                installUIRecordHandler = null;
+            }
+        }
+        finally
+        {
+            // restore the previous internal UI level
+            if (previousUILevel != ExtendedPInvoke.INSTALLUILEVEL.INSTALLUILEVEL_NOCHANGE)
+            {
+                // NOTE: as the uiHWnd parameter of MsiSetInternalUI changes the value we pass in, create a copy of our previous internal UI hWnd to preserve its value
+                internalUIhWnd = previousInternalUIhWnd;
+                var setInternalUIResult = ExtendedPInvoke.MsiSetInternalUI(previousUILevel, ref internalUIhWnd);
+                //
+                // verify that the install UI level was restored (and that we changed from the setting we had previously selected)
+                if (setInternalUIResult == ExtendedPInvoke.INSTALLUILEVEL.INSTALLUILEVEL_NOCHANGE)
+                {
+                    Debug.Assert(false, "WARNING: MSiSetInternalUI tried to restore the previous internal UI level but failed (error: INSTALLUILEVEL_NOCHANGE).");
+                }
+                else if (setInternalUIResult != newInternalUILevel)
+                {
+                    Debug.Assert(false, "WARNING: MSiSetInternalUI got back a different 'new' internal UI level than what we set.");
+                }
+                //
+                // verify that the install UI hWnd was restored
+                Debug.Assert(internalUIhWnd == newInternalUIhWnd, "WARNING: MsiSetInternalUI got back a different 'new' internal UI hWnd than what we set.");
+            }
+        }
+    }
+    
+    //
+    
     internal int InstallUiRecordHandler(IntPtr pvContext, uint iMessageType, uint hRecord)
     {
         var installationMessageType = PInvokeUtils.InstallUiHandlerMessageType.FromMessageType(iMessageType);
