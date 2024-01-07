@@ -35,8 +35,8 @@ public record AtodOperation : MorphicAssociatedValueEnum<AtodOperation.Values>
     }
 
     // functions to create member instances
-    public static AtodOperation Install(string applicationName, string? fullPath) => new AtodOperation(Values.Install) { ApplicationName = applicationName, FullPath = fullPath };
-    public static AtodOperation Uninstall(string applicationName) => new AtodOperation(Values.Uninstall) { ApplicationName = applicationName };
+    public static AtodOperation Install(string applicationName, string? fullPath) => new(Values.Install) { ApplicationName = applicationName, FullPath = fullPath };
+    public static AtodOperation Uninstall(string applicationName) => new(Values.Uninstall) { ApplicationName = applicationName };
 
     // associated values
     public string? ApplicationName { get; private set; }
