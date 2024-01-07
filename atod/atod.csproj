@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AToD.Deployment.MSI\AToD.Deployment.MSI.csproj" />
+    <ProjectReference Include="..\AToD.Networking\AToD.Networking.csproj" />
   </ItemGroup>
 
 </Project>

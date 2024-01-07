@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "atod", "atod\atod.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AToD.Deployment.MSI", "AToD.Deployment.MSI\AToD.Deployment.MSI.csproj", "{401D7485-2DEA-4987-B1FD-A1764645457C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AToD.Networking", "AToD.Networking\AToD.Networking.csproj", "{E7FC6B14-850A-455F-93AC-99E3A11C526C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -41,6 +43,18 @@ Global
 		{401D7485-2DEA-4987-B1FD-A1764645457C}.Release|x64.Build.0 = Release|x64
 		{401D7485-2DEA-4987-B1FD-A1764645457C}.Release|x86.ActiveCfg = Release|x86
 		{401D7485-2DEA-4987-B1FD-A1764645457C}.Release|x86.Build.0 = Release|x86
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Debug|ARM64.Build.0 = Debug|ARM64
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Debug|x64.ActiveCfg = Debug|x64
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Debug|x64.Build.0 = Debug|x64
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Debug|x86.ActiveCfg = Debug|x86
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Debug|x86.Build.0 = Debug|x86
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Release|ARM64.ActiveCfg = Release|ARM64
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Release|ARM64.Build.0 = Release|ARM64
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Release|x64.ActiveCfg = Release|x64
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Release|x64.Build.0 = Release|x64
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Release|x86.ActiveCfg = Release|x86
+		{E7FC6B14-850A-455F-93AC-99E3A11C526C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
