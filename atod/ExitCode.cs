@@ -27,6 +27,4 @@ internal enum ExitCode : int
     UnknownProduct          = 0x0003,
     // msi installation-related failures
     WindowsInstallerMiscError = 0x0100,
-    // windows service related errors
- //   WindowsServiceMiscError = 0x0200,
 }
