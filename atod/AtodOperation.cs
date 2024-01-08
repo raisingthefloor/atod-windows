@@ -16,31 +16,33 @@
 // * Consumer Electronics Association Foundation
 
 using Morphic.Core;
+using System;
 
-namespace atod;
+namespace Atod;
 
 public record AtodOperation : MorphicAssociatedValueEnum<AtodOperation.Values>
 {
     // enum members
     public enum Values
     {
-        Install,
-#if DEBUG		
+        Download,
         InstallMsi,
-#endif
         Uninstall,
+        Unzip,
     }
 
     // functions to create member instances
-    public static AtodOperation Install(string applicationName, string? fullPath) => new(Values.Install) { ApplicationName = applicationName, FullPath = fullPath };
-#if DEBUG		
-    public static AtodOperation InstallMsi(string fullPath) => new(Values.InstallMsi) { FullPath = fullPath };
-#endif
-    public static AtodOperation Uninstall(string applicationName) => new(Values.Uninstall) { ApplicationName = applicationName };
+    public static AtodOperation Download(Uri uri, AtodPath destinationPath, string filename) => new(Values.Download) { Uri = uri, DestinationPath = destinationPath, Filename = filename };
+    public static AtodOperation InstallMsi(AtodPath sourcePath, string filename) => new(Values.InstallMsi) { SourcePath = sourcePath, Filename = filename };
+    public static AtodOperation Uninstall(Guid windowsInstallerProductCode) => new(Values.Uninstall) { WindowsInstallerProductCode = windowsInstallerProductCode };
+    public static AtodOperation Unzip(AtodPath sourcePath, string filename, AtodPath destinationPath) => new(Values.Unzip) { SourcePath = sourcePath, Filename = filename, DestinationPath = destinationPath };
 
     // associated values
-    public string? ApplicationName { get; private set; }
-    public string? FullPath { get; private set; }
+    public AtodPath? DestinationPath { get; private set; }
+    public string? Filename { get; private set; }
+    public AtodPath? SourcePath { get; private set; }
+    public Uri? Uri { get; private set; }
+    public Guid? WindowsInstallerProductCode { get; private set; }
 
     // verbatim required constructor implementation for MorphicAssociatedValueEnums
     private AtodOperation(Values value) : base(value) { }

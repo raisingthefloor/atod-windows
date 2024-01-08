@@ -15,11 +15,10 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-using System;
 using System.Diagnostics;
 using System.Text;
 
-namespace AToD.Deployment.MSI;
+namespace Atod.Deployment.Msi;
 
 internal struct MsiRecord
 {

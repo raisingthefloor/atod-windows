@@ -18,36 +18,10 @@
 using Morphic.Core;
 using System.Threading.Tasks;
 
-namespace AToD.Compression;
+namespace Atod.Compression;
 
 public class ZipUtils
 {
-    // NOTE: ideally a caller would do cleanup themselves, to distinguish between an "unzip zipFile" error and a "delete zipFile" error--since the latter is likely recoverable
-    public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> UnzipThenDelete(string zipFile, string destinationDirectory)
-    {
-        // unzip the file
-        var unzipResult = await ZipUtils.UnzipAsync(zipFile, destinationDirectory);
-
-        // delete the zip file
-        try
-        {
-            System.IO.File.Delete(zipFile);
-        }
-        catch
-        {
-            return MorphicResult.ErrorResult();
-        }
-
-        if (unzipResult.IsSuccess)
-        {
-            return MorphicResult.OkResult();
-        }
-        else
-        {
-            return MorphicResult.ErrorResult();
-        }
-    }
-
     public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> UnzipAsync(string zipFile, string destinationDirectory)
     {
         try

@@ -20,13 +20,13 @@ using System.Net;
 using System.Threading.Tasks;
 using System;
 
-namespace AToD.Networking;
+namespace Atod.Networking;
 
 public static class DownloadUtils
 {
     // NOTE: this variant of DownloadFile downloads the specified file to the current user's temporary folder; it returns a path to the filename
     // NOTE: we should look into adding "file cleanup" code to DownloadFileAsync, in case the download was aborted
-    internal static async Task<MorphicResult<string, MorphicUnit>> DownloadFileAsync(Uri uri, Action<double>? progressFunction = null)
+    public static async Task<MorphicResult<string, MorphicUnit>> DownloadFileAsync(Uri uri, Action<double>? progressFunction = null)
     {
         // create a unique, zero-length file to store the download
         string destinationPath;
@@ -51,7 +51,7 @@ public static class DownloadUtils
 
 
     // NOTE: we should look into adding "file cleanup" code to DownloadFileAsync, in case the download was aborted
-    internal static async Task<MorphicResult<MorphicUnit, MorphicUnit>> DownloadFileAsync(Uri uri, string destinationPath, bool overwriteExistingFile, Action<double>? progressFunction = null)
+    public static async Task<MorphicResult<MorphicUnit, MorphicUnit>> DownloadFileAsync(Uri uri, string destinationPath, bool overwriteExistingFile, Action<double>? progressFunction = null)
     {
         // NOTE: WebClient is deprecated, but we have been unable to find any other mechanism that consistently provides the total download size (i.e. content size).
         //       We tried System.Net.Http.HttpClient and it appears to provide _no_ way to get this information; trying to get the content length from the read stream results in an exception

@@ -15,12 +15,13 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
-namespace atod;
+namespace Atod;
 
-using atod.UI;
+using Atod.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -34,7 +35,8 @@ public class Program
 
         var showGeneralHelp = false;
 
-        AtodOperation? atodOperationAsNullable = null;
+        AtodSequenceType? atodSequenceType = new();
+        List<AtodOperation> atodOperations = new();
 
         ExitCode? exitCode = null;
 
@@ -59,34 +61,69 @@ public class Program
                         break;
                     case "INSTALL":
                         {
-                            var showInstallCommandHelp = false;
-
-                            string? applicationName;
                             if (commandLineArgs.Length > 2)
                             {
-                                // capture the application name					
-                                applicationName = commandLineArgs[2];
-
-                                string? fullPath = null;
-                                if (commandLineArgs.Length > 3)
+                                var applicationNameOrInstallerPath = commandLineArgs[2];
+#if DEBUG
+                                // if the provided "install" argument is the path to an installer, capture its full path
+                                var lowercaseApplicationNameOrInstallerPath = applicationNameOrInstallerPath.ToLowerInvariant();
+                                string? installerType = null;
+                                if (lowercaseApplicationNameOrInstallerPath.Length >= ".msi".Length && lowercaseApplicationNameOrInstallerPath.Substring(lowercaseApplicationNameOrInstallerPath.Length - 4) == ".msi")
                                 {
-                                    // if (optionally) provided, capture the full path to the installer
-                                    fullPath = commandLineArgs[3];
+                                    installerType = "msi";
+                                }
+                                if (installerType is not null)
+                                {
+                                    string fullPath;
+                                    try
+                                    {
+                                        fullPath = System.IO.Path.GetFullPath(applicationNameOrInstallerPath);
+                                    }
+                                    catch
+                                    {
+                                        Console.WriteLine("Installer path is invalid.");
+                                        Console.WriteLine();
+                                        return (int)(ExitCode.InvalidPath);
+                                    }
 
-                                    atodOperationAsNullable = AtodOperation.Install(applicationName, fullPath);
+                                    if (System.IO.File.Exists(fullPath) == false)
+                                    {
+                                        Console.WriteLine("Installer file does not exist.");
+                                        Console.WriteLine();
+                                        return (int)(ExitCode.FileNotFound);
+                                    }
+
+                                    switch (installerType!)
+                                    {
+                                        case "msi":
+                                            atodOperations = new() 
+                                            { 
+                                                AtodOperation.InstallMsi(AtodPath.None, fullPath)
+                                            };
+                                            break;
+                                        default:
+                                            throw new Exception("invalid code path");
+                                    }
                                 }
                                 else
                                 {
-                                    // TODO: if the full path was not specified, search for the path to the installer (and remove this block of code)
-                                    Console.WriteLine("Sorry, path is required in the current implementation; automatic download will be added in a future release");
-                                    Console.WriteLine();
-                                    //
-                                    exitCode = ExitCode.MissingArgument;
-                                    showInstallCommandHelp = true;
+#endif
+                                    // capture the application name
+                                    var knownApplication = KnownApplication.TryFromProductName(applicationNameOrInstallerPath);
+                                    if (knownApplication is null)
+                                    {
+                                        Console.WriteLine();
+                                        Console.WriteLine("Application name is not recognized.");
+                                        return (int)ExitCode.UnknownProduct;
+                                    }
 
-                                    // TODO: if we could successfully find the installer's full path, populate the atodOperationAsNullable here
-                                    //atodOperationAsNullable = AtodOperation.Install(applicationName);
+                                    // capture the installation operations for the application
+                                    atodOperations = knownApplication!.Value.GetInstallOperations();
+#if DEBUG
                                 }
+#endif
+
+                                atodSequenceType = AtodSequenceType.Install;
                             }
                             else
                             {
@@ -94,61 +131,31 @@ public class Program
                                 Console.WriteLine("Application name was not provided.");
                                 Console.WriteLine();
                                 //
-                                exitCode = ExitCode.MissingArgument;
-                                showInstallCommandHelp = true;
-                            }
-
-                            if (showInstallCommandHelp == true)
-                            {
-                                // missing application name
                                 Program.WriteInstallUsageToConsole();
-                                return (int)(exitCode ?? ExitCode.Success);
+                                return (int)ExitCode.MissingArgument;
                             }
                         }
                         break;
-#if DEBUG
-                    case "INSTALLMSI":
-                        {
-                            var showInstallCommandHelp = false;
-
-                            string? fullPath = null;
-                            if (commandLineArgs.Length > 2)
-                            {
-                                // capture the full path to the installer
-                                fullPath = commandLineArgs[2];
-
-                                atodOperationAsNullable = AtodOperation.InstallMsi(fullPath);
-                            }
-                            else
-                            {
-                                // the full path to the MSI was not provided; the command is incomplete					
-                                Console.WriteLine("Path to application installer (MSI) was not provided.");
-                                Console.WriteLine();
-                                //
-                                exitCode = ExitCode.MissingArgument;
-                                showInstallCommandHelp = true;
-                            }
-
-                            if (showInstallCommandHelp == true)
-                            {
-                                // missing application name
-                                Program.WriteInstallmsiUsageToConsole();
-                                return (int)(exitCode ?? ExitCode.Success);
-                            }
-                        }
-                        break;
-#endif
                     case "UNINSTALL":
                         {
-                            var showUninstallCommandHelp = false;
-
-                            string? applicationName;
                             if (commandLineArgs.Length > 2)
                             {
-                                // capture the application name					
+                                // capture the application
+                                string? applicationName;
                                 applicationName = commandLineArgs[2];
 
-                                atodOperationAsNullable = AtodOperation.Uninstall(applicationName);
+                                var knownApplication = KnownApplication.TryFromProductName(applicationName);
+                                if (knownApplication is null)
+                                {
+                                    Console.WriteLine();
+                                    Console.WriteLine("Application name is not recognized.");
+                                    return (int)ExitCode.UnknownProduct;
+                                }
+
+                                // capture the installation operations for the application
+                                atodOperations = knownApplication!.Value.GetUninstallOperations();
+
+                                atodSequenceType = AtodSequenceType.Uninstall;
                             }
                             else
                             {
@@ -156,15 +163,8 @@ public class Program
                                 Console.WriteLine("Application name was not provided.");
                                 Console.WriteLine();
                                 //
-                                exitCode = ExitCode.MissingArgument;
-                                showUninstallCommandHelp = true;
-                            }
-
-                            if (showUninstallCommandHelp == true)
-                            {
-                                // missing application name
                                 Program.WriteUninstallUsageToConsole();
-                                return (int)(exitCode ?? ExitCode.Success);
+                                return (int)ExitCode.MissingArgument;
                             }
                         }
                         break;
@@ -187,212 +187,430 @@ public class Program
             }
         }
 
-        if (atodOperationAsNullable is null || showGeneralHelp == true)
+        if (atodSequenceType is null || showGeneralHelp == true)
         {
             Program.WriteGeneralUsageToConsole();
             return (int)(exitCode ?? ExitCode.Success);
         }
 
-        // NOTE: at this point, we know we have a valid operation
-        var atodOperation = atodOperationAsNullable!;
+        // NOTE: at this point, we know we have a valid sequence of AToD operations
 
-        // execute the operation
+        // create a collection for paths which will be used by the installation process
+        var atodAbsolutePathsWithLowercaseKeys = new Dictionary<string, string>();
+
+        // create a collection of files and folders to clean up after the operations have completed; note that files will be cleaned up first and then folders (since the files could be located inside those folders, and we don't want to deal with arbitrary "file not found" failures)
+        var newAbsolutePathsForTemporaryFiles = new List<string>();
+        var newAbsolutePathsForTemporaryFolders = new List<string>();
+
+        // execute the operations
         //
-        switch (atodOperation.Value)
+        var atodOperationCount = atodOperations.Count;
+        //
+        string initialProgressBarText = atodSequenceType.Value! switch
         {
-            case AtodOperation.Values.Install:
-#if DEBUG
-            case AtodOperation.Values.InstallMsi:
-#endif
-                {
-                    var progressBar = new ConsoleProgressBar()
+            AtodSequenceType.Install => "Starting installation...",
+            AtodSequenceType.Uninstall => "Starting uninstallation...",
+            _ => throw new Exception("invalid code path")
+        };
+
+        bool rebootRequiredAfterSequence = false;
+
+        var progressBar = new ConsoleProgressBar()
+        {
+            Minimum = 0,
+            Maximum = 1.0,
+            Value = 0,
+            //
+            TrailingText = initialProgressBarText ?? "Starting AToD operation...",
+        };
+        progressBar.Show();
+        //
+        for (var iOperation = 0; iOperation < atodOperationCount; iOperation += 1)
+        {
+            var atodOperation = atodOperations[iOperation];
+
+            switch (atodOperation!.Value)
+            {
+                case AtodOperation.Values.Download:
                     {
-                        Minimum = 0,
-                        Maximum = 1.0,
-                        Value = 0,
-                        //
-                        TrailingText = "Starting installation..."
-                    };
-                    progressBar.Show();
-
-                    // NOTE: in the future, we'll attempt to download the package if the packagePath is not provided; for now the packagePath is always provided (i.e. not null) per our check in the args (above)
-                    var packagePath = atodOperation.FullPath!;
-                    //
-                    // set up the command line settings (i.e. installer properties, etc.)
-                    var commandLineSettings = new Dictionary<string, string>();
-                    //
-                    // suppress all reboot prompts and the actual reboots; this will cause the operation to return ERROR_SUCCESS_REBOOT_REQUIRED instead of ERROR_SUCCESS if a reboot is required
-                    commandLineSettings.Add("REBOOT", "ReallySuppress");
-
-                    var windowsInstaller = new AToD.Deployment.MSI.WindowsInstaller();
-
-                    Stopwatch stopwatch = Stopwatch.StartNew();
-
-                    int? lastProgressPercentAsWholeNumber = null;
-                    char[] spinnerChars = new char[] { '/', '-', '\\', '|' };
-                    int lastSpinnerCharIndex = 0;
-                    //
-                    long? elapsedMillisecondsAtLastProgressBarUpdate = null;
-                    windowsInstaller.ProgressUpdate += (sender, args) =>
-                    {
-                        var percent = args.Percent;
-                        if (percent != 0)
+                        string? destinationFullPath;
+                        switch (atodOperation.DestinationPath!.Value)
                         {
-                            var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
-
-                            var percentAsWholeNumber = (int)(percent * 100);
-                            if (lastProgressPercentAsWholeNumber is null || lastProgressPercentAsWholeNumber.Value != percentAsWholeNumber)
-                            {
-                                progressBar.Value = percent;
-
-                                lastProgressPercentAsWholeNumber = percentAsWholeNumber;
-                            }
-
-                            const long MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES = 250;
-                            if (elapsedMillisecondsAtLastProgressBarUpdate is null || elapsedMilliseconds >= elapsedMillisecondsAtLastProgressBarUpdate.Value + MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES)
-                            {
-                                var spinnerCharIndex = (lastSpinnerCharIndex + 1) % spinnerChars.Length;
-                                progressBar.TrailingText = spinnerChars[spinnerCharIndex] + " Installing";
-                                lastSpinnerCharIndex = spinnerCharIndex;
-
-                                elapsedMillisecondsAtLastProgressBarUpdate = elapsedMilliseconds;
-                            }
+                            case AtodPath.Values.CreateTemporaryFolderForNewPathKey:
+                                var temporaryFolderKey = atodOperation.DestinationPath!.Key!.ToLowerInvariant();
+                                try
+                                {
+                                    var tempDirectoryInfo = System.IO.Directory.CreateTempSubdirectory("atod_");
+                                    atodAbsolutePathsWithLowercaseKeys[temporaryFolderKey] = tempDirectoryInfo.FullName!;
+                                    newAbsolutePathsForTemporaryFolders.Add(tempDirectoryInfo.FullName!);
+                                    //
+                                    destinationFullPath = Path.Combine(tempDirectoryInfo.FullName, atodOperation.Filename!);
+                                    newAbsolutePathsForTemporaryFiles.Add(destinationFullPath);
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("Could not create a temporary folder for downloaded file.");
+                                    Console.WriteLine();
+                                    //
+                                    return (int)ExitCode.FileNotFound;
+                                }
+                                break;
+                            default:
+                                throw new Exception("unsupported choice");
+//                                throw new Exception("invalid code path");
                         }
-                    };
 
-                    var installResult = await windowsInstaller.InstallAsync(packagePath, commandLineSettings);
-                    if (installResult.IsError == true)
-                    {
-                        progressBar.Hide();
+                        Stopwatch stopwatch = Stopwatch.StartNew();
 
-                        Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Installation Failed");
-                        Console.WriteLine();
-                        Console.WriteLine("Application could not be installed.");
-                        Console.WriteLine("Error: " + installResult.Error!.Win32ErrorCode.ToString());
-                        return (int)ExitCode.WindowsInstallerMiscError;
+                        int? lastProgressPercentAsWholeNumber = null;
+                        char[] spinnerChars = new char[] { '/', '-', '\\', '|' };
+                        int lastSpinnerCharIndex = 0;
+                        //
+                        long? elapsedMillisecondsAtLastProgressBarUpdate = null;
+                        var progressUpdate = new Action<double>((percentageComplete) =>
+                        {
+                            var percent = ((double)iOperation / (double)atodOperationCount) + (percentageComplete / (double)atodOperationCount);
+                            if (percent != 0)
+                            {
+                                var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+
+                                var percentAsWholeNumber = (int)(percent * 100);
+                                if (lastProgressPercentAsWholeNumber is null || lastProgressPercentAsWholeNumber.Value != percentAsWholeNumber)
+                                {
+                                    progressBar.Value = percent;
+
+                                    lastProgressPercentAsWholeNumber = percentAsWholeNumber;
+                                }
+
+                                const long MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES = 250;
+                                if (elapsedMillisecondsAtLastProgressBarUpdate is null || elapsedMilliseconds >= elapsedMillisecondsAtLastProgressBarUpdate.Value + MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES)
+                                {
+                                    var spinnerCharIndex = (lastSpinnerCharIndex + 1) % spinnerChars.Length;
+                                    progressBar.TrailingText = spinnerChars[spinnerCharIndex] + " Downloading";
+                                    lastSpinnerCharIndex = spinnerCharIndex;
+
+                                    elapsedMillisecondsAtLastProgressBarUpdate = elapsedMilliseconds;
+                                }
+                            }
+                        });
+
+                        var downloadFileResult = await Atod.Networking.DownloadUtils.DownloadFileAsync(atodOperation.Uri!, destinationFullPath!, false, progressUpdate);
+                        if (downloadFileResult.IsError == true)
+                        {
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Download Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Could not download file.");
+                            Console.WriteLine();
+                            //
+                            return (int)ExitCode.DownloadFailed;
+                        }
+
+                        progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
+                        progressBar.TrailingText = "Downloaded";
                     }
-                    var installResultValue = installResult.Value!;
-                    var rebootRequired = installResultValue.RebootRequired;
-
-                    // otherwise, we succeeded.
-                    progressBar.Value = 1.0;
-                    switch (rebootRequired)
+                    break;
+                case AtodOperation.Values.InstallMsi:
                     {
-                        case false:
-                            progressBar.TrailingText = "Installation complete";
-                            break;
-                        case true:
-                            progressBar.TrailingText = "Installation will be complete after reboot";
-                            break;
-                    }
+                        string msiFileFullPath;
+                        switch (atodOperation.SourcePath!.Value)
+                        {
+                            case AtodPath.Values.ExistingPathKey:
+                                string? existingPath;
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                if (existingPathExists == false)
+                                {
+                                    Console.WriteLine("Source path for MSI not found; this probably indicates a download failure (or internal failure).");
+                                    Console.WriteLine();
+                                    //
+                                    return (int)ExitCode.FileNotFound;
+                                }
+                                msiFileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                break;
+                            case AtodPath.Values.None:
+                                msiFileFullPath = atodOperation.Filename!;
+                                break;
+                            default:
+                                throw new Exception("unsupported choice");
+//                                throw new Exception("invalid code path");
+                        }
+                        //
+                        // set up the command line settings (i.e. installer properties, etc.)
+                        var commandLineSettings = new Dictionary<string, string>();
+                        //
+                        // suppress all reboot prompts and the actual reboots; this will cause the operation to return ERROR_SUCCESS_REBOOT_REQUIRED instead of ERROR_SUCCESS if a reboot is required
+                        commandLineSettings.Add("REBOOT", "ReallySuppress");
 
-                    Console.WriteLine(); // line-terminate the current progress bar, while leaving it SHOWING
+                        var windowsInstaller = new Atod.Deployment.Msi.WindowsInstaller();
+
+                        Stopwatch stopwatch = Stopwatch.StartNew();
+
+                        int? lastProgressPercentAsWholeNumber = null;
+                        char[] spinnerChars = new char[] { '/', '-', '\\', '|' };
+                        int lastSpinnerCharIndex = 0;
+                        //
+                        long? elapsedMillisecondsAtLastProgressBarUpdate = null;
+                        windowsInstaller.ProgressUpdate += (sender, args) =>
+                        {
+                            var percent = ((double)iOperation / (double)atodOperationCount) + (args.Percent / (double)atodOperationCount);
+                            if (percent != 0)
+                            {
+                                var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+
+                                var percentAsWholeNumber = (int)(percent * 100);
+                                if (lastProgressPercentAsWholeNumber is null || lastProgressPercentAsWholeNumber.Value != percentAsWholeNumber)
+                                {
+                                    progressBar.Value = percent;
+
+                                    lastProgressPercentAsWholeNumber = percentAsWholeNumber;
+                                }
+
+                                const long MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES = 250;
+                                if (elapsedMillisecondsAtLastProgressBarUpdate is null || elapsedMilliseconds >= elapsedMillisecondsAtLastProgressBarUpdate.Value + MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES)
+                                {
+                                    var spinnerCharIndex = (lastSpinnerCharIndex + 1) % spinnerChars.Length;
+                                    progressBar.TrailingText = spinnerChars[spinnerCharIndex] + " Installing";
+                                    lastSpinnerCharIndex = spinnerCharIndex;
+
+                                    elapsedMillisecondsAtLastProgressBarUpdate = elapsedMilliseconds;
+                                }
+                            }
+                        };
+
+                        var installResult = await windowsInstaller.InstallAsync(msiFileFullPath, commandLineSettings);
+                        if (installResult.IsError == true)
+                        {
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Installation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Application could not be installed.");
+                            Console.WriteLine("Error: " + installResult.Error!.Win32ErrorCode.ToString());
+                            return (int)ExitCode.WindowsInstallerMiscError;
+                        }
+                        var installResultValue = installResult.Value!;
+                        rebootRequiredAfterSequence = installResultValue.RebootRequired;
+
+                        // NOTE: some installers may require a reboot before the next steps in the sequence can continue; we may need to expand our installation sequence schema to accomodate those (instead of requesting a reboot after the full sequence completes)
+
+                        // otherwise, we succeeded.
+                        progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
+                        switch (installResultValue.RebootRequired)
+                        {
+                            case false:
+                                progressBar.TrailingText = "Installed";
+                                break;
+                            case true:
+                                progressBar.TrailingText = "Reboot required to complete install";
+                                break;
+                        }
+                    }
+                    break;
+                case AtodOperation.Values.Uninstall:
+                    {
+                        // resolve product name into product code
+                        var msiProductCode = atodOperation.WindowsInstallerProductCode!.Value;
+
+                        var commandLineSettings = new Dictionary<string, string>();
+
+                        var windowsInstaller = new Atod.Deployment.Msi.WindowsInstaller();
+
+                        Stopwatch stopwatch = Stopwatch.StartNew();
+
+                        int? lastProgressPercentAsWholeNumber = null;
+                        char[] spinnerChars = new char[] { '/', '-', '\\', '|' };
+                        int lastSpinnerCharIndex = 0;
+                        //
+                        long? elapsedMillisecondsAtLastProgressBarUpdate = null;
+                        windowsInstaller.ProgressUpdate += (sender, args) =>
+                        {
+                            var percent = ((double)iOperation / (double)atodOperationCount) + (args.Percent / (double)atodOperationCount);
+                            if (percent != 0)
+                            {
+                                var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+
+                                var percentAsWholeNumber = (int)(percent * 100);
+                                if (lastProgressPercentAsWholeNumber is null || lastProgressPercentAsWholeNumber.Value != percentAsWholeNumber)
+                                {
+                                    progressBar.Value = percent;
+
+                                    lastProgressPercentAsWholeNumber = percentAsWholeNumber;
+                                }
+
+                                const long MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES = 250;
+                                if (elapsedMillisecondsAtLastProgressBarUpdate is null || elapsedMilliseconds >= elapsedMillisecondsAtLastProgressBarUpdate.Value + MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES)
+                                {
+                                    var spinnerCharIndex = (lastSpinnerCharIndex + 1) % spinnerChars.Length;
+                                    progressBar.TrailingText = spinnerChars[spinnerCharIndex] + " Uninstalling";
+                                    lastSpinnerCharIndex = spinnerCharIndex;
+
+                                    elapsedMillisecondsAtLastProgressBarUpdate = elapsedMilliseconds;
+                                }
+                            }
+                        };
+
+                        var uninstallResult = await windowsInstaller.UninstallAsync(msiProductCode, commandLineSettings);
+                        if (uninstallResult.IsError == true)
+                        {
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Application could not be uninstalled.");
+                            Console.WriteLine("Error: " + uninstallResult.Error!.Win32ErrorCode.ToString());
+                            return (int)ExitCode.WindowsInstallerMiscError;
+                        }
+                        var uninstallResultValue = uninstallResult.Value!;
+                        rebootRequiredAfterSequence = uninstallResultValue.RebootRequired;
+
+                        // NOTE: some installers may require a reboot before the next steps in the sequence can continue; we may need to expand our uninstallation sequence schema to accomodate those (instead of recommending/requesting a reboot after the full sequence completes)
+
+                        // otherwise, we succeeded.
+                        progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
+                        switch (uninstallResultValue.RebootRequired)
+                        {
+                            case false:
+                                progressBar.TrailingText = "Uninstalled";
+                                break;
+                            case true:
+                                progressBar.TrailingText = "Reboot required to complete uninstall";
+                                break;
+                        }
+                    }
+                    break;
+                case AtodOperation.Values.Unzip:
+                    {
+                        string zipFileFullPath;
+                        switch (atodOperation.SourcePath!.Value)
+                        {
+                            case AtodPath.Values.ExistingPathKey:
+                                string? existingPath;
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                if (existingPathExists == false)
+                                {
+                                    Console.WriteLine("Source path for MSI not found; this probably indicates a download failure (or internal failure).");
+                                    Console.WriteLine();
+                                    //
+                                    return (int)ExitCode.FileNotFound;
+                                }
+                                zipFileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                break;
+                            case AtodPath.Values.None:
+                                zipFileFullPath = atodOperation.Filename!;
+                                break;
+                            default:
+                                throw new Exception("unsupported choice");
+//                                throw new Exception("invalid code path");
+                        }
+                        string destinationFolderPath;
+                        switch (atodOperation.DestinationPath!.Value)
+                        {
+                            case AtodPath.Values.CreateTemporaryFolderForNewPathKey:
+                                var temporaryFolderKey = atodOperation.DestinationPath!.Key!.ToLowerInvariant();
+                                try
+                                {
+                                    var tempDirectoryInfo = System.IO.Directory.CreateTempSubdirectory("atod_");
+                                    atodAbsolutePathsWithLowercaseKeys[temporaryFolderKey] = tempDirectoryInfo.FullName!;
+                                    newAbsolutePathsForTemporaryFolders.Add(tempDirectoryInfo.FullName!);
+                                    //
+                                    destinationFolderPath = tempDirectoryInfo.FullName;
+                                }
+                                catch
+                                {
+                                    Console.WriteLine("Could not create a temporary folder for unzipping operation.");
+                                    Console.WriteLine();
+                                    //
+                                    return (int)ExitCode.FileNotFound;
+                                }
+                                break;
+                            default:
+                                throw new Exception("unsupported choice");
+//                                throw new Exception("invalid code path");
+                        }
+
+                        progressBar.TrailingText = "Extracting files";
+
+                        var unzipResult = await Atod.Compression.ZipUtils.UnzipAsync(zipFileFullPath, destinationFolderPath);
+                        if (unzipResult.IsError == true)
+                        {
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Extraction Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Zip file could not be extracted.");
+                            return (int)ExitCode.UnarchiveFailed;
+                        }
+
+                        // otherwise, we succeeded.
+                        progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
+                        progressBar.TrailingText = "Files extracted";
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        // clean up any temporary files and folders
+        // NOTE: we clean up temporary files before temporary folders because they may be contained within the temporary folders
+        foreach (var absolutePathForTemporaryFile in newAbsolutePathsForTemporaryFiles)
+        {
+            try
+            {
+                System.IO.File.Delete(absolutePathForTemporaryFile);
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                // NOTE: temporary files might have been cleaned up by the system automatically
+                Debug.Assert(false, "Temporary file not found, cannot be deleted");
+            }
+            catch
+            {
+                Debug.Assert(false, "Could not delete temporary file");
+                // NOTE: we may want to consider asking the operating system to clean up this file later
+                Console.WriteLine("WARNING -- Could not delete temporary file: " + absolutePathForTemporaryFile);
+            }
+        }
+        foreach (var absolutePathForTemporaryFolder in newAbsolutePathsForTemporaryFolders)
+        {
+            try
+            {
+                System.IO.Directory.Delete(absolutePathForTemporaryFolder, true);
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                Debug.Assert(false, "Temporary folder not found, cannot be deleted");
+                Console.WriteLine("Temporary folder could not be found (but was marked for cleanup deletion): " + absolutePathForTemporaryFolder);
+            }
+            catch
+            {
+                Debug.Assert(false, "Could not delete temporary folder");
+                // NOTE: we may want to consider asking the operating system to clean up this folder later
+                Console.WriteLine("WARNING -- Could not delete temporary folder: " + absolutePathForTemporaryFolder);
+            }
+        }
+
+        Console.WriteLine(); // line-terminate the current progress bar, while leaving it SHOWING
+        Console.WriteLine();
+        switch (atodSequenceType.Value!)
+        {
+            case AtodSequenceType.Install:
+                Console.WriteLine("Application has been installed.");
+                if (rebootRequiredAfterSequence == true)
+                {
                     Console.WriteLine();
-                    Console.WriteLine("Application has been installed.");
-                    if (rebootRequired == true)
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine("*** REBOOT REQUIRED: the computer needs to be restarted to complete the installation. ***");
-                    }
+                    Console.WriteLine("*** REBOOT REQUIRED: the computer needs to be restarted to complete the installation. ***");
                 }
                 break;
-            case AtodOperation.Values.Uninstall:
+            case AtodSequenceType.Uninstall:
+                Console.WriteLine("Application has been uninstalled.");
+                if (rebootRequiredAfterSequence == true)
                 {
-                    // resolve product name into product code
-                    var msiProductCode = KnownMsiProductCodes.TryFromProductName(atodOperation.ApplicationName!);
-                    if (msiProductCode is null)
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine("Application name is not recognized.");
-                        return (int)ExitCode.UnknownProduct;
-                    }
-
-                    var progressBar = new ConsoleProgressBar()
-                    {
-                        Minimum = 0,
-                        Maximum = 1.0,
-                        Value = 0,
-                        //
-                        TrailingText = "Starting uninstallation..."
-                    };
-                    progressBar.Show();
-
-                    var commandLineSettings = new Dictionary<string, string>();
-
-                    var windowsInstaller = new AToD.Deployment.MSI.WindowsInstaller();
-
-                    Stopwatch stopwatch = Stopwatch.StartNew();
-
-                    int? lastProgressPercentAsWholeNumber = null;
-                    char[] spinnerChars = new char[] { '/', '-', '\\', '|' };
-                    int lastSpinnerCharIndex = 0;
-                    //
-                    long? elapsedMillisecondsAtLastProgressBarUpdate = null;
-                    windowsInstaller.ProgressUpdate += (sender, args) =>
-                    {
-                        var percent = args.Percent;
-                        if (percent != 0)
-                        {
-                            var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
-
-                            var percentAsWholeNumber = (int)(percent * 100);
-                            if (lastProgressPercentAsWholeNumber is null || lastProgressPercentAsWholeNumber.Value != percentAsWholeNumber)
-                            {
-                                progressBar.Value = percent;
-
-                                lastProgressPercentAsWholeNumber = percentAsWholeNumber;
-                            }
-
-                            const long MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES = 250;
-                            if (elapsedMillisecondsAtLastProgressBarUpdate is null || elapsedMilliseconds >= elapsedMillisecondsAtLastProgressBarUpdate.Value + MINIMUM_MILLISECONDS_BETWEEN_TRAILING_TEXT_UPDATES)
-                            {
-                                var spinnerCharIndex = (lastSpinnerCharIndex + 1) % spinnerChars.Length;
-                                progressBar.TrailingText = spinnerChars[spinnerCharIndex] + " Uninstalling";
-                                lastSpinnerCharIndex = spinnerCharIndex;
-
-                                elapsedMillisecondsAtLastProgressBarUpdate = elapsedMilliseconds;
-                            }
-                        }
-                    };
-
-                    var uninstallResult = await windowsInstaller.UninstallAsync(msiProductCode.Value, commandLineSettings);
-                    if (uninstallResult.IsError == true)
-                    {
-                        progressBar.Hide();
-
-                        Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
-                        Console.WriteLine();
-                        Console.WriteLine("Application could not be uninstalled.");
-                        Console.WriteLine("Error: " + uninstallResult.Error!.Win32ErrorCode.ToString());
-                        return (int)ExitCode.WindowsInstallerMiscError;
-                    }
-                    var uninstallResultValue = uninstallResult.Value!;
-                    var rebootRequired = uninstallResultValue.RebootRequired;
-
-                    // otherwise, we succeeded.
-                    progressBar.Value = 1.0;
-                    switch (rebootRequired)
-                    {
-                        case false:
-                            progressBar.TrailingText = "Uninstallation complete";
-                            break;
-                        case true:
-                            progressBar.TrailingText = "Uninstallation will be complete after reboot";
-                            break;
-                    }
-
-                    Console.WriteLine(); // line-terminate the current progress bar, while leaving it SHOWING
                     Console.WriteLine();
-                    Console.WriteLine("Application has been uninstalled.");
-                    if (rebootRequired == true)
-                    {
-                        Console.WriteLine();
-                        Console.WriteLine("*** REBOOT REQUIRED: the computer needs to be restarted to complete the uninstallation. ***");
-                    }
+                    Console.WriteLine("*** REBOOT REQUIRED: the computer needs to be restarted to complete the uninstallation. ***");
                 }
                 break;
             default:
-                throw new NotImplementedException();
+                throw new Exception("invalid code path");
         }
 
         return (int)(exitCode ?? ExitCode.Success);
@@ -429,9 +647,6 @@ public class Program
         Console.WriteLine();
         Console.WriteLine("The following commands are available:");
         Console.WriteLine("  install     Install an application.");
-#if DEBUG
-        Console.WriteLine("  installmsi  Install a specified .MSI file.");
-#endif
         //Console.WriteLine("  settings   Configure settings for an installed application (requires account).");
         Console.WriteLine("  uninstall   Uninstall an application.");
         Console.WriteLine();
@@ -440,27 +655,18 @@ public class Program
     private static void WriteInstallUsageToConsole()
     {
         Console.WriteLine("Usage:");
-        Console.WriteLine("  atod install <APPLICATION_NAME> [path]");
+        Console.WriteLine("  atod install <APPLICATION_NAME>");
+#if DEBUG
+        Console.WriteLine("  atod install [path]");
+#endif
         Console.WriteLine();
         Console.WriteLine("Required arguments:");
         Console.WriteLine("  <APPLICATION_NAME>  The name of the application to install.");
-        Console.WriteLine();
-        Console.WriteLine("Optional arguments:");
-        Console.WriteLine("  [path]              The full path to the application installer.");
-        Console.WriteLine();
-    }
-
 #if DEBUG
-    private static void WriteInstallmsiUsageToConsole()
-    {
-        Console.WriteLine("Usage:");
-        Console.WriteLine("  atod installmsi [path]");
-        Console.WriteLine();
-        Console.WriteLine("Required arguments:");
-        Console.WriteLine("  [path]              The full path to the application installer.");
+        Console.WriteLine("  [path]              The full path to the application installer, including filename.");
+#endif
         Console.WriteLine();
     }
-#endif
 
     private static void WriteUninstallUsageToConsole()
     {

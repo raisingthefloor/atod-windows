@@ -24,7 +24,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace AToD.Deployment.MSI;
+namespace Atod.Deployment.Msi;
 
 public class WindowsInstaller
 {

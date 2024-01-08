@@ -1,4 +1,4 @@
-﻿// Copyright 2022-2024 Raising the Floor - US, Inc.
+﻿// Copyright 2024 Raising the Floor - US, Inc.
 //
 // The R&D leading to these results received funding from the:
 // * Rehabilitation Services Administration, US Dept. of Education under
@@ -15,20 +15,11 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+
 namespace Atod;
 
-internal enum ExitCode : int
+public enum AtodSequenceType
 {
-    // success
-    Success                 = 0x0000,
-    // command line related errors
-    InvalidCommand          = 0x0001,
-    MissingArgument         = 0x0002,
-    UnknownProduct          = 0x0003,
-    FileNotFound            = 0x0004,
-    InvalidPath             = 0x0005,
-    DownloadFailed          = 0x0006,
-    UnarchiveFailed         = 0x0007,
-    // msi installation-related failures
-    WindowsInstallerMiscError = 0x0100,
+    Install,
+    Uninstall,
 }

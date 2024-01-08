@@ -19,7 +19,7 @@ using System;
 using System.Diagnostics;
 using System.Text;
 
-namespace atod.UI;
+namespace Atod.UI;
 
 internal class ConsoleProgressBar
 {

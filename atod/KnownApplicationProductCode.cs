@@ -17,18 +17,18 @@
 
 using System;
 
-namespace atod;
+namespace Atod;
 
-internal struct KnownMsiProductCodes
+internal struct KnownApplicationProductCode
 {
     public static readonly Guid READ_AND_WRITE = new Guid(0x355AB00F, 0x48E8, 0x474E, 0xAC, 0xC4, 0xD9, 0x17, 0xBA, 0xFA, 0x4D, 0x58); // {355AB00F-48E8-474E-ACC4-D917BAFA4D58}
 
     public static Guid? TryFromProductName(string productName)
     {
-        switch (productName.ToUpperInvariant())
+        switch (productName.ToLowerInvariant())
         {
-            case "READANDWRITE":
-                return KnownMsiProductCodes.READ_AND_WRITE;
+            case "readandwrite":
+                return KnownApplicationProductCode.READ_AND_WRITE;
             default:
                 return null;
         }

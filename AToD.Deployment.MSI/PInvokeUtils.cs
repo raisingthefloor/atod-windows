@@ -17,7 +17,7 @@
 
 using System;
 
-namespace AToD.Deployment.MSI;
+namespace Atod.Deployment.Msi;
 
 internal class PInvokeUtils
 {

@@ -1,22 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
-    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
-    <Platforms>x86;x64;ARM64</Platforms>
-    <Nullable>enable</Nullable>
-    <Copyright>Copyright (c) Raising the Floor - US, Inc.</Copyright>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+		<SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+		<Platforms>x86;x64;ARM64</Platforms>
+		<Nullable>enable</Nullable>
+		<VersionPrefix>1.1$(VersionBuildComponents)</VersionPrefix>
+		<VersionSuffix Condition="'$(Configuration)' == 'Debug'">dev</VersionSuffix>
+		<VersionSuffix Condition="'$(Configuration)' == 'Release'">$(VersionSuffix)</VersionSuffix>
+		<Copyright>Copyright (c) Raising the Floor - US, Inc.</Copyright>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Morphic.Core" Version="1.3.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Morphic.Core" Version="1.3.1" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\AToD.Compression\AToD.Compression.csproj" />
-    <ProjectReference Include="..\AToD.Deployment.MSI\AToD.Deployment.MSI.csproj" />
-    <ProjectReference Include="..\AToD.Networking\AToD.Networking.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Atod.Compression\Atod.Compression.csproj" />
+		<ProjectReference Include="..\Atod.Deployment.Msi\Atod.Deployment.Msi.csproj" />
+		<ProjectReference Include="..\Atod.Networking\Atod.Networking.csproj" />
+	</ItemGroup>
 
 </Project>
