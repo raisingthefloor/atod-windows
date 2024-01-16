@@ -40,9 +40,10 @@ variables:
 - name: projects
   value: |
          atod/atod.csproj
-#         Atod.Compression/Atod.Compression.csproj
-#         Atod.Deployment.Msi/Atod.Deployment.Msi.csproj
-#         Atod.Networking/Atod.Networking.csproj
+- name: buildConfiguration
+  value: 'Release'
+- name: versionBuildComponents
+  value: '.$(Build.BuildNumber)'
 
 stages:
   - stage: build
