@@ -127,8 +127,8 @@ stages:
         - task: CopyFiles@2
           displayName: 'Copy installer (x86)'
           inputs:
-            SourceFolder: '$(Build.SourcesDirectory)\AToDemandSetup\bin\x86\Release\en-US'
-            Contents: AToDemandSetup.msi
+            SourceFolder: '$(Build.SourcesDirectory)\AtodSetup\bin\x86\Release\en-US'
+            Contents: AtodSetup.msi
             TargetFolder: '$(Build.ArtifactStagingDirectory)\x86'
 
         - task: CmdLine@2
