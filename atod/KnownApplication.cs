@@ -54,7 +54,7 @@ internal struct KnownApplication
                     AtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/us/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip"), // US download MSI
                     //AtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/uk/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip"), // UK download MSI
                     AtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "setup.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
-                    AtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi"),
+                    AtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi", requiresElevation: true),
                 };
                 break;
             default:
@@ -73,7 +73,7 @@ internal struct KnownApplication
             case IdValue.ReadAndWrite:
                 result = new List<AtodOperation>()
                 {
-                    AtodOperation.Uninstall(this.GetWindowsInstallerProductCode()!.Value),
+                    AtodOperation.Uninstall(this.GetWindowsInstallerProductCode()!.Value, requiresElevation: true),
                 };
                 break;
             default:

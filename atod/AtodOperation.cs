@@ -33,13 +33,14 @@ public record AtodOperation : MorphicAssociatedValueEnum<AtodOperation.Values>
 
     // functions to create member instances
     public static AtodOperation Download(Uri uri, AtodPath destinationPath, string filename) => new(Values.Download) { Uri = uri, DestinationPath = destinationPath, Filename = filename };
-    public static AtodOperation InstallMsi(AtodPath sourcePath, string filename) => new(Values.InstallMsi) { SourcePath = sourcePath, Filename = filename };
-    public static AtodOperation Uninstall(Guid windowsInstallerProductCode) => new(Values.Uninstall) { WindowsInstallerProductCode = windowsInstallerProductCode };
+    public static AtodOperation InstallMsi(AtodPath sourcePath, string filename, bool requiresElevation) => new(Values.InstallMsi) { SourcePath = sourcePath, Filename = filename, RequiresElevation = requiresElevation };
+    public static AtodOperation Uninstall(Guid windowsInstallerProductCode, bool requiresElevation) => new(Values.Uninstall) { WindowsInstallerProductCode = windowsInstallerProductCode, RequiresElevation = requiresElevation };
     public static AtodOperation Unzip(AtodPath sourcePath, string filename, AtodPath destinationPath) => new(Values.Unzip) { SourcePath = sourcePath, Filename = filename, DestinationPath = destinationPath };
 
     // associated values
     public AtodPath? DestinationPath { get; private set; }
     public string? Filename { get; private set; }
+    public bool? RequiresElevation { get; private set; }
     public AtodPath? SourcePath { get; private set; }
     public Uri? Uri { get; private set; }
     public Guid? WindowsInstallerProductCode { get; private set; }

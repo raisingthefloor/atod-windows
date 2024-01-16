@@ -29,6 +29,7 @@ internal enum ExitCode : int
     InvalidPath             = 0x0005,
     DownloadFailed          = 0x0006,
     UnarchiveFailed         = 0x0007,
+    ElevationRequired       = 0x0008,
     // msi installation-related failures
     WindowsInstallerMiscError = 0x0100,
 }

@@ -33,6 +33,32 @@ public class Program
         //
         Program.WriteBannerToConsole();
 
+        // determine if our process is running elevated (and also if UAC is enabled by policy)
+        bool isCurrentProcessElevated;
+        var isProcessElevatedResult = Atod.WindowsNative.Process.ProcessUtils.IsProcessElevated(Process.GetCurrentProcess());
+        if (isProcessElevatedResult.IsSuccess)
+        {
+            isCurrentProcessElevated = isProcessElevatedResult.Value!;
+        }
+        else
+        {
+            Debug.Assert(false, "Could not determine if process is elevated; falling back to 'not elevated'");
+            isCurrentProcessElevated = false;
+        }
+        //
+        //// NOTE: if UAC is not enabled, it may not be necessary for this process to be elevated
+        //var isUacEnabledResult = Atod.WindowsNative.Uac.UacUtils.IsUacEnabled();
+        //bool isUacEnabledByPolicy;
+        //if (isUacEnabledResult.IsSuccess)
+        //{
+        //    isUacEnabledByPolicy = isUacEnabledResult.Value!;
+        //}
+        //else
+        //{
+        //    Debug.Assert(false, "Could not determine if UAC is enabled by policy; falling back to 'UAC is enabled'");
+        //    isUacEnabledByPolicy = true;
+        //}
+
         var showGeneralHelp = false;
 
         AtodSequenceType? atodSequenceType = new();
@@ -96,9 +122,9 @@ public class Program
                                     switch (installerType!)
                                     {
                                         case "msi":
-                                            atodOperations = new() 
-                                            { 
-                                                AtodOperation.InstallMsi(AtodPath.None, fullPath)
+                                            atodOperations = new()
+                                            {
+                                                AtodOperation.InstallMsi(AtodPath.None, fullPath, requiresElevation: true)
                                             };
                                             break;
                                         default:
@@ -201,6 +227,27 @@ public class Program
         // create a collection of files and folders to clean up after the operations have completed; note that files will be cleaned up first and then folders (since the files could be located inside those folders, and we don't want to deal with arbitrary "file not found" failures)
         var newAbsolutePathsForTemporaryFiles = new List<string>();
         var newAbsolutePathsForTemporaryFolders = new List<string>();
+
+        // if the operations require elevation, make sure that our process is elevated
+        bool atodOperationsRequireElevation = false;
+        foreach (var operation in atodOperations)
+        {
+            if (operation.RequiresElevation is not null && operation.RequiresElevation!.Value! == true)
+            {
+                atodOperationsRequireElevation = true;
+            }
+        }
+
+        if (atodOperationsRequireElevation == true && isCurrentProcessElevated == false)
+        {
+            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Cannot start AToD operation");
+            Console.WriteLine();
+            Console.WriteLine("This operation requires elevated privileges (e.g. 'run as Administrator').");
+            Console.WriteLine("Please restart atod.exe in a terminal session with elevated privileges.");
+            Console.WriteLine();
+            //
+            return (int)ExitCode.ElevationRequired;
+        }
 
         // execute the operations
         //

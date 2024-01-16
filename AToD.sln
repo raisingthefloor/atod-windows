@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Atod.Compression", "Atod.Co
 EndProject
 Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "AtodSetup", "AtodSetup\AtodSetup.wixproj", "{31A6A8C0-40AF-4861-A6C4-46FAC14BBC63}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atod.WindowsNative", "Atod.WindowsNative\Atod.WindowsNative.csproj", "{5367FC42-E7EA-4863-84C9-91BD507C6702}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -83,6 +85,18 @@ Global
 		{31A6A8C0-40AF-4861-A6C4-46FAC14BBC63}.Release|x64.Build.0 = Release|x64
 		{31A6A8C0-40AF-4861-A6C4-46FAC14BBC63}.Release|x86.ActiveCfg = Release|x86
 		{31A6A8C0-40AF-4861-A6C4-46FAC14BBC63}.Release|x86.Build.0 = Release|x86
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Debug|ARM64.Build.0 = Debug|ARM64
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Debug|x64.ActiveCfg = Debug|x64
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Debug|x64.Build.0 = Debug|x64
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Debug|x86.ActiveCfg = Debug|x86
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Debug|x86.Build.0 = Debug|x86
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Release|ARM64.ActiveCfg = Release|ARM64
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Release|ARM64.Build.0 = Release|ARM64
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Release|x64.ActiveCfg = Release|x64
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Release|x64.Build.0 = Release|x64
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Release|x86.ActiveCfg = Release|x86
+		{5367FC42-E7EA-4863-84C9-91BD507C6702}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
