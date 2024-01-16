@@ -27,18 +27,13 @@
 
   <Fragment>
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-  	  <Component>
-  	    <File Id="atod_exe" Source="publish\win-$(Platform)\atod.exe" />
-  	  </Component>
-  	  <Component>
-  	    <File Source="publish\win-$(Platform)\atod.pdb" />
-  	  </Component>
-	  <Component Id="AutoRunRegistryEntries">
-		  <RegistryKey Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run" Root="HKLM">
-			  <RegistryValue KeyPath="yes" Name="AT on Demand" Type="string" Value="&quot;[INSTALLFOLDER]atod.exe&quot;"/>
-		  </RegistryKey>
-	  </Component>
-  	</ComponentGroup>
+      <Component>
+        <File Id="atod_exe" Source="..\publish\win-$(Platform)\atod.exe" />
+      </Component>
+      <Component>
+        <File Source="..\publish\win-$(Platform)\atod.pdb" />
+      </Component>
+    </ComponentGroup>
   </Fragment>
 	
 </Wix>
