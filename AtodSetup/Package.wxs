@@ -1,0 +1,44 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+  <Package Name="AT on Demand" Manufacturer="Raising the Floor - US, Inc." Version="!(bind.FileVersion.atod_exe)" UpgradeCode="c6e249e8-faab-4531-903c-85a7a6dcd56e">
+    <MajorUpgrade DowngradeErrorMessage="!(loc.DowngradeError)" />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="Main">
+      <ComponentGroupRef Id="ProductComponents" />
+    </Feature>
+
+    <ui:WixUI Id="WixUI_Minimal" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+
+    <UIRef Id="WixUI_ErrorProgressText" />
+	
+    <Property Id="WINDOWSBUILDNUMBER" Secure="yes">
+      <RegistrySearch Id="BuildNumberSearch" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion" Name="CurrentBuildNumber" Type="raw" />
+    </Property>
+    <Launch Condition="(WINDOWSBUILDNUMBER &gt;= 19041)" Message="!(loc.MinimumOsError)" />
+  </Package>
+
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="!(bind.Property.ProductName)" />
+    </StandardDirectory>
+  </Fragment>
+
+  <Fragment>
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+  	  <Component>
+  	    <File Id="atod_exe" Source="publish\win-$(Platform)\atod.exe" />
+  	  </Component>
+  	  <Component>
+  	    <File Source="publish\win-$(Platform)\atod.pdb" />
+  	  </Component>
+	  <Component Id="AutoRunRegistryEntries">
+		  <RegistryKey Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run" Root="HKLM">
+			  <RegistryValue KeyPath="yes" Name="AT on Demand" Type="string" Value="&quot;[INSTALLFOLDER]atod.exe&quot;"/>
+		  </RegistryKey>
+	  </Component>
+  	</ComponentGroup>
+  </Fragment>
+	
+</Wix>

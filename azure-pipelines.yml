@@ -36,7 +36,7 @@ variables:
 - name: mainProject
   value: atod/atod.csproj
 - name: setupProject
-  value: atod.setup/atod.Setup.wixproj
+  value: AtodSetup/AtodSetup.wixproj
 - name: projects
   value: |
          atod/atod.csproj
