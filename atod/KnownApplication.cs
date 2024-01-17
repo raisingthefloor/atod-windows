@@ -56,7 +56,7 @@ internal struct KnownApplication
                 result = new List<AtodOperation>()
                 {
                     AtodOperation.Download(new Uri("https://www.nvaccess.org/download/nvda/releases/2023.3.1/nvda_2023.3.1.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "nvda_2023.3.1.exe"),
-                    AtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--install-silent", true),
+                    AtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--minimal --install-silent", true),
                 };
                 break;
             case IdValue.ReadAndWrite:
