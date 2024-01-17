@@ -179,7 +179,14 @@ public class Program
                                 }
 
                                 // capture the installation operations for the application
-                                atodOperations = knownApplication!.Value.GetUninstallOperations();
+                                var nullableAtodOperations = knownApplication!.Value.GetUninstallOperations();
+                                if (nullableAtodOperations is null)
+                                {
+                                    Console.WriteLine();
+                                    Console.WriteLine("Application does not have a registered uninstall procedure.");
+                                    return (int)ExitCode.UninstallerNotRegistered;
+                                }
+                                atodOperations = nullableAtodOperations!;
 
                                 atodSequenceType = AtodSequenceType.Uninstall;
                             }
@@ -354,6 +361,92 @@ public class Program
 
                         progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
                         progressBar.TrailingText = "Downloaded";
+                    }
+                    break;
+                case AtodOperation.Values.InstallExe:
+                    {
+                        string exeFileFullPath;
+                        switch (atodOperation.SourcePath!.Value)
+                        {
+                            case AtodPath.Values.ExistingPathKey:
+                                string? existingPath;
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                if (existingPathExists == false)
+                                {
+                                    Console.WriteLine("Source path for EXE not found; this probably indicates a download failure (or internal failure).");
+                                    Console.WriteLine();
+                                    //
+                                    return (int)ExitCode.FileNotFound;
+                                }
+                                exeFileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                break;
+                            case AtodPath.Values.None:
+                                exeFileFullPath = atodOperation.Filename!;
+                                break;
+                            default:
+                                throw new Exception("unsupported choice");
+//                                throw new Exception("invalid code path");
+                        }
+                        //
+                        // set up the command line arguments
+                        string? exeArguments = atodOperation.CommandLineArgs;
+
+                        progressBar.TrailingText = "Installing";
+
+                        System.Diagnostics.ProcessStartInfo startInfo;
+                        if (exeArguments is not null)
+                        {
+                            startInfo = new System.Diagnostics.ProcessStartInfo(exeFileFullPath, exeArguments!);
+                        }
+                        else
+                        {
+                            startInfo = new System.Diagnostics.ProcessStartInfo(exeFileFullPath);
+                        }
+                        startInfo.UseShellExecute = true;
+
+                        System.Diagnostics.Process? exeProcess;
+                        System.ComponentModel.Win32Exception? win32Exception = null;
+                        try
+                        {
+                            exeProcess = System.Diagnostics.Process.Start(startInfo);
+                        }
+                        catch (System.ComponentModel.Win32Exception ex)
+                        {
+                            exeProcess = null;
+                            win32Exception = ex;
+                        }
+                        //
+                        if (exeProcess is null)
+                        {
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Installation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Application could not be installed.");
+                            if (win32Exception is not null)
+                            {
+                                Console.WriteLine("Win32 error code: " + win32Exception!.ErrorCode.ToString());
+                            }
+                            return (int)ExitCode.ExeInstallerMiscError;
+                        }
+
+                        await exeProcess!.WaitForExitAsync();
+
+                        var exeExitCode = exeProcess!.ExitCode;
+                        if (exeExitCode != 0)
+                        {
+                            Debug.Assert(false, "EXE exited with non-zero status code; make sure this is not a status code indicating a reboot requirement, etc.");
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Installation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Application could not be installed.");
+                            Console.WriteLine("EXE installer exit code: " + exeExitCode.ToString());
+                            return (int)ExitCode.ExeInstallerMiscError;
+                        }
+
+                        progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
+                        progressBar.TrailingText = "Installed";
                     }
                     break;
                 case AtodOperation.Values.InstallMsi:

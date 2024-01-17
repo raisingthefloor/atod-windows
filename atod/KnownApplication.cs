@@ -24,17 +24,21 @@ internal struct KnownApplication
 {
     public enum IdValue
     {
-        ReadAndWrite
+        Nvda,
+        ReadAndWrite,
     }
 
     public readonly KnownApplication.IdValue Id { get; init; }
 
+    public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
     public static readonly KnownApplication READ_AND_WRITE = new() { Id = IdValue.ReadAndWrite };
 
     public static KnownApplication? TryFromProductName(string applicationName)
     {
         switch (applicationName.ToLowerInvariant())
         {
+            case "nvda":
+                return KnownApplication.NVDA;
             case "readandwrite":
                 return KnownApplication.READ_AND_WRITE;
             default:
@@ -48,6 +52,13 @@ internal struct KnownApplication
 
         switch (this.Id)
         {
+            case IdValue.Nvda:
+                result = new List<AtodOperation>()
+                {
+                    AtodOperation.Download(new Uri("https://www.nvaccess.org/download/nvda/releases/2023.3.1/nvda_2023.3.1.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "nvda_2023.3.1.exe"),
+                    AtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--install-silent", true),
+                };
+                break;
             case IdValue.ReadAndWrite:
                 result = new List<AtodOperation>()
                 {
@@ -64,12 +75,16 @@ internal struct KnownApplication
         return result;
     }
 
-    public List<AtodOperation> GetUninstallOperations()
+    public List<AtodOperation>? GetUninstallOperations()
     {
-        List<AtodOperation> result;
+        List<AtodOperation>? result;
 
         switch (this.Id)
         {
+            case IdValue.Nvda:
+                // no silent uninstaller available
+                result = null;
+                break;
             case IdValue.ReadAndWrite:
                 result = new List<AtodOperation>()
                 {
@@ -87,6 +102,8 @@ internal struct KnownApplication
     {
         switch (this.Id)
         {
+            case IdValue.Nvda:
+                return null;
             case IdValue.ReadAndWrite:
                 return KnownApplicationProductCode.READ_AND_WRITE;
             default:

@@ -30,6 +30,9 @@ internal enum ExitCode : int
     DownloadFailed          = 0x0006,
     UnarchiveFailed         = 0x0007,
     ElevationRequired       = 0x0008,
+    UninstallerNotRegistered= 0x0009,
     // msi installation-related failures
     WindowsInstallerMiscError = 0x0100,
+    // exe installation-related failures
+    ExeInstallerMiscError   = 0x0200,
 }
