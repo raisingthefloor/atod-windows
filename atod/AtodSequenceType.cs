@@ -20,6 +20,7 @@ namespace Atod;
 
 public enum AtodSequenceType
 {
+    CalculateChecksum,
     Install,
     Uninstall,
 }

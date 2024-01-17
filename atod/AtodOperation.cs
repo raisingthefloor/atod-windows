@@ -25,21 +25,27 @@ public record AtodOperation : MorphicAssociatedValueEnum<AtodOperation.Values>
     // enum members
     public enum Values
     {
+        CalculateChecksum,
         Download,
         InstallExe,
         InstallMsi,
         Uninstall,
         Unzip,
+        VerifyChecksum,
     }
 
     // functions to create member instances
-    public static AtodOperation Download(Uri uri, AtodPath destinationPath, string filename) => new(Values.Download) { Uri = uri, DestinationPath = destinationPath, Filename = filename };
+    public static AtodOperation CalculateChecksum(AtodPath sourcePath, string filename, AtodChecksumAlgorithm checksumAlgorithm) => new(Values.CalculateChecksum) { SourcePath = sourcePath, Filename = filename, ChecksumAlgorithm = checksumAlgorithm };
+    public static AtodOperation Download(Uri uri, AtodPath destinationPath, string filename, IAtodChecksum? checksum) => new(Values.Download) { Uri = uri, DestinationPath = destinationPath, Filename = filename, Checksum = checksum };
     public static AtodOperation InstallExe(AtodPath sourcePath, string filename, string? commandLineArgs, bool requiresElevation) => new(Values.InstallExe) { SourcePath = sourcePath, Filename = filename, CommandLineArgs = commandLineArgs, RequiresElevation = requiresElevation };
     public static AtodOperation InstallMsi(AtodPath sourcePath, string filename, bool requiresElevation) => new(Values.InstallMsi) { SourcePath = sourcePath, Filename = filename, RequiresElevation = requiresElevation };
     public static AtodOperation Uninstall(Guid windowsInstallerProductCode, bool requiresElevation) => new(Values.Uninstall) { WindowsInstallerProductCode = windowsInstallerProductCode, RequiresElevation = requiresElevation };
     public static AtodOperation Unzip(AtodPath sourcePath, string filename, AtodPath destinationPath) => new(Values.Unzip) { SourcePath = sourcePath, Filename = filename, DestinationPath = destinationPath };
+    public static AtodOperation VerifyChecksum(AtodPath sourcePath, string filename, IAtodChecksum checksum) => new(Values.VerifyChecksum) { SourcePath = sourcePath, Filename = filename, Checksum = checksum };
 
     // associated values
+    public IAtodChecksum? Checksum { get; private set; }
+    public AtodChecksumAlgorithm? ChecksumAlgorithm { get; private set; }
     public string? CommandLineArgs { get; private set; }
     public AtodPath? DestinationPath { get; private set; }
     public string? Filename { get; private set; }

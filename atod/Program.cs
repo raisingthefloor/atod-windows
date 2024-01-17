@@ -18,6 +18,7 @@
 namespace Atod;
 
 using Atod.UI;
+using Morphic.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -85,6 +86,59 @@ public class Program
                             showGeneralHelp = true;
                         }
                         break;
+#if DEBUG
+                    case "CHECKSUM":
+                        {
+                            if (commandLineArgs.Length > 2)
+                            {
+                                var algorithmOrFilename = commandLineArgs[2];
+
+                                string? fullPath;
+
+                                AtodChecksumAlgorithm? checksumAlgorithm = AtodChecksumAlgorithmFactory.TryFrom(algorithmOrFilename);
+                                if (checksumAlgorithm is null)
+                                {
+                                    // default algorithm
+                                    checksumAlgorithm = AtodChecksumAlgorithm.Sha256;
+
+                                    // this argument was a filename
+                                    fullPath = algorithmOrFilename;
+                                }
+                                else
+                                {
+                                    if (commandLineArgs.Length > 3)
+                                    {
+                                        fullPath = commandLineArgs[3];
+                                    }
+                                    else
+                                    {
+                                        // the path was not provided; the command is incomplete					
+                                        Console.WriteLine("Path was not provided.");
+                                        Console.WriteLine();
+                                        //
+                                        Program.WriteCalculateChecksumUsageToConsole();
+                                        return (int)ExitCode.MissingArgument;
+                                    }
+                                }
+
+                                atodOperations = new()
+                                {
+                                    AtodOperation.CalculateChecksum(AtodPath.None, fullPath, checksumAlgorithm!.Value)
+                                };
+                                atodSequenceType = AtodSequenceType.CalculateChecksum;
+                            }
+                            else
+                            {
+                                // the path was not provided; the command is incomplete					
+                                Console.WriteLine("Path was not provided.");
+                                Console.WriteLine();
+                                //
+                                Program.WriteCalculateChecksumUsageToConsole();
+                                return (int)ExitCode.MissingArgument;
+                            }
+                        }
+                        break;
+#endif
                     case "INSTALL":
                         {
                             if (commandLineArgs.Length > 2)
@@ -138,8 +192,8 @@ public class Program
                                     var knownApplication = KnownApplication.TryFromProductName(applicationNameOrInstallerPath);
                                     if (knownApplication is null)
                                     {
-                                        Console.WriteLine();
                                         Console.WriteLine("Application name is not recognized.");
+                                        Console.WriteLine();
                                         return (int)ExitCode.UnknownProduct;
                                     }
 
@@ -173,8 +227,8 @@ public class Program
                                 var knownApplication = KnownApplication.TryFromProductName(applicationName);
                                 if (knownApplication is null)
                                 {
-                                    Console.WriteLine();
                                     Console.WriteLine("Application name is not recognized.");
+                                    Console.WriteLine();
                                     return (int)ExitCode.UnknownProduct;
                                 }
 
@@ -182,8 +236,8 @@ public class Program
                                 var nullableAtodOperations = knownApplication!.Value.GetUninstallOperations();
                                 if (nullableAtodOperations is null)
                                 {
-                                    Console.WriteLine();
                                     Console.WriteLine("Application does not have a registered uninstall procedure.");
+                                    Console.WriteLine();
                                     return (int)ExitCode.UninstallerNotRegistered;
                                 }
                                 atodOperations = nullableAtodOperations!;
@@ -262,6 +316,7 @@ public class Program
         //
         string initialProgressBarText = atodSequenceType.Value! switch
         {
+            AtodSequenceType.CalculateChecksum => "Calculating checksum...",
             AtodSequenceType.Install => "Starting installation...",
             AtodSequenceType.Uninstall => "Starting uninstallation...",
             _ => throw new Exception("invalid code path")
@@ -285,6 +340,56 @@ public class Program
 
             switch (atodOperation!.Value)
             {
+                case AtodOperation.Values.CalculateChecksum:
+                    {
+                        string fileFullPath;
+                        switch (atodOperation.SourcePath!.Value)
+                        {
+                            case AtodPath.Values.ExistingPathKey:
+                                string? existingPath;
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                if (existingPathExists == false)
+                                {
+                                    Console.WriteLine("Source path for file not found; this probably indicates a download failure (or internal failure).");
+                                    Console.WriteLine();
+                                    //
+                                    return (int)ExitCode.FileNotFound;
+                                }
+                                fileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                break;
+                            case AtodPath.Values.None:
+                                fileFullPath = atodOperation.Filename!;
+                                break;
+                            default:
+                                throw new Exception("unsupported choice");
+//                                throw new Exception("invalid code path");
+                        }
+                        var checksumAlgorithm = atodOperation.ChecksumAlgorithm!.Value;
+
+                        progressBar.TrailingText = "Calculating checksum...";
+
+                        var calculateChecksumResult = await Program.CalculateChecksumAsync(fileFullPath, checksumAlgorithm);
+                        if (calculateChecksumResult.IsError == true)
+                        {
+                            Debug.Assert(false, "Could not calculate checksum; this may indicate a cryptography library failure");
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Checksum Calculation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Checksum could not be calculated.");
+                            return (int)ExitCode.ChecksumCalculationFail;
+                        }
+                        var checksumAsByteArray = calculateChecksumResult.Value! switch
+                        {
+                            IAtodChecksum.Sha256 { Checksum: var checksum } => checksum,
+                            _ => throw new Exception("unknown algorithm; invalid code path"),
+                        };
+                        var checksumAsCsvString = String.Join<byte>(", ", checksumAsByteArray);
+
+                        progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
+                        progressBar.TrailingText = "Checksum: [" + checksumAsCsvString + "]";
+                    }
+                    break;
                 case AtodOperation.Values.Download:
                     {
                         string? destinationFullPath;
@@ -357,6 +462,39 @@ public class Program
                             Console.WriteLine();
                             //
                             return (int)ExitCode.DownloadFailed;
+                        }
+
+                        // if a checksum was provided, verify it now
+                        if (atodOperation.Checksum is not null)
+                        {
+                            var checksum = atodOperation.Checksum!;
+
+                            progressBar.TrailingText = "Verifying checksum...";
+
+                            var verifyChecksumResult = await Program.VerifyChecksumMatchesAsync(destinationFullPath!, checksum);
+                            if (verifyChecksumResult.IsError == true)
+                            {
+                                Debug.Assert(false, "Could not verify checksum; this may indicate a cryptography library failure");
+                                progressBar.Hide();
+
+                                Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Checksum Verification Failed");
+                                Console.WriteLine();
+                                Console.WriteLine("Checksum on downloaded file could not be verified.");
+                                return (int)ExitCode.ChecksumCalculationFail;
+                            }
+                            var checksumMatches = verifyChecksumResult.Value!;
+
+                            if (checksumMatches == false)
+                            {
+                                progressBar.Hide();
+
+                                Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Checksum Verification Failed");
+                                Console.WriteLine();
+                                Console.WriteLine("Downloaded file's checksum does not match.");
+                                return (int)ExitCode.ChecksumMismatch;
+                            }
+
+                            // if we reach here, the checksum verification was required--and checksum verification passed
                         }
 
                         progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
@@ -685,6 +823,61 @@ public class Program
                         progressBar.TrailingText = "Files extracted";
                     }
                     break;
+                case AtodOperation.Values.VerifyChecksum:
+                    {
+                        string fileFullPath;
+                        switch (atodOperation.SourcePath!.Value)
+                        {
+                            case AtodPath.Values.ExistingPathKey:
+                                string? existingPath;
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                if (existingPathExists == false)
+                                {
+                                    Console.WriteLine("Source path for file not found; this probably indicates a download failure (or internal failure).");
+                                    Console.WriteLine();
+                                    //
+                                    return (int)ExitCode.FileNotFound;
+                                }
+                                fileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                break;
+                            case AtodPath.Values.None:
+                                fileFullPath = atodOperation.Filename!;
+                                break;
+                            default:
+                                throw new Exception("unsupported choice");
+//                                throw new Exception("invalid code path");
+                        }
+                        var checksum = atodOperation.Checksum!;
+
+                        progressBar.TrailingText = "Verifying checksum...";
+
+                        var verifyChecksumResult = await Program.VerifyChecksumMatchesAsync(fileFullPath, checksum);
+                        if (verifyChecksumResult.IsError == true)
+                        {
+                            Debug.Assert(false, "Could not verify checksum; this may indicate a cryptography library failure");
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Checksum Verification Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Checksum could not be verified.");
+                            return (int)ExitCode.ChecksumCalculationFail;
+                        }
+                        var checksumMatches = verifyChecksumResult.Value!;
+
+                        if (checksumMatches == false)
+                        {
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Checksum Verification Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("File checksum does not match.");
+                            return (int)ExitCode.ChecksumMismatch;
+                        }
+
+                        progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
+                        progressBar.TrailingText = "Checksum Verified";
+                    }
+                    break;
                 default:
                     throw new NotImplementedException();
             }
@@ -733,6 +926,11 @@ public class Program
         Console.WriteLine();
         switch (atodSequenceType.Value!)
         {
+            case AtodSequenceType.CalculateChecksum:
+                {
+                    Console.WriteLine("Checksum has been calculated.");
+                }
+                break;
             case AtodSequenceType.Install:
                 Console.WriteLine("Application has been installed.");
                 if (rebootRequiredAfterSequence == true)
@@ -786,9 +984,25 @@ public class Program
         Console.WriteLine("usage: atod <command> [arguments]");
         Console.WriteLine();
         Console.WriteLine("The following commands are available:");
+#if DEBUG
+        Console.WriteLine("  checksum    Calculate the checksum for a file.");
+#endif
         Console.WriteLine("  install     Install an application.");
         //Console.WriteLine("  settings   Configure settings for an installed application (requires account).");
         Console.WriteLine("  uninstall   Uninstall an application.");
+        Console.WriteLine();
+    }
+
+    private static void WriteCalculateChecksumUsageToConsole()
+    {
+        Console.WriteLine("Usage:");
+        Console.WriteLine("  atod checksum [ALGORITHM] <PATH>");
+        Console.WriteLine();
+        Console.WriteLine("Required arguments:");
+        Console.WriteLine("  <PATH>              The full path to the file.");
+        Console.WriteLine();
+        Console.WriteLine("Optional arguments:");
+        Console.WriteLine("  [ALGORITHM]         The checksum algorithm (default is sha256)");
         Console.WriteLine();
     }
 
@@ -797,13 +1011,13 @@ public class Program
         Console.WriteLine("Usage:");
         Console.WriteLine("  atod install <APPLICATION_NAME>");
 #if DEBUG
-        Console.WriteLine("  atod install [path]");
+        Console.WriteLine("  atod install <PATH>");
 #endif
         Console.WriteLine();
         Console.WriteLine("Required arguments:");
         Console.WriteLine("  <APPLICATION_NAME>  The name of the application to install.");
 #if DEBUG
-        Console.WriteLine("  [path]              The full path to the application installer, including filename.");
+        Console.WriteLine("  <PATH>              The full path to the application installer, including filename.");
 #endif
         Console.WriteLine();
     }
@@ -818,4 +1032,49 @@ public class Program
         Console.WriteLine();
     }
 
+    private static async Task<MorphicResult<IAtodChecksum, MorphicUnit>> CalculateChecksumAsync(string path, AtodChecksumAlgorithm checksumAlgorithm)
+    {
+        System.IO.FileStream fileStream;
+        try
+        {
+            fileStream = System.IO.File.Open(path, FileMode.Open, FileAccess.Read);
+        }
+        catch
+        {
+            return MorphicResult.ErrorResult();
+        }
+        //
+        try
+        {
+            try
+            {
+                var sha256 = System.Security.Cryptography.SHA256.Create();
+                var checksum = await sha256.ComputeHashAsync(fileStream);
+                return MorphicResult.OkResult<IAtodChecksum>(new IAtodChecksum.Sha256(checksum));
+            }
+            catch
+            {
+                return MorphicResult.ErrorResult();
+            }
+        }
+        finally
+        {
+            fileStream.Close();
+        }
+    }
+
+    private static async Task<MorphicResult<bool, MorphicUnit>> VerifyChecksumMatchesAsync(string path, IAtodChecksum checksum)
+    {
+        var checksumAlgorithm = checksum.GetAlgorithm();
+
+        var calculateChecksumResult = await Program.CalculateChecksumAsync(path, checksumAlgorithm);
+        if (calculateChecksumResult.IsError)
+        {
+            return MorphicResult.ErrorResult();
+        }
+        var verifyChecksum = calculateChecksumResult.Value!;
+
+        var result = checksum.ChecksumEqual(verifyChecksum);
+        return MorphicResult.OkResult(result);
+    }
 }
