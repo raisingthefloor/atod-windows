@@ -31,10 +31,8 @@ internal enum ExitCode : int
     UnarchiveFailed         = 0x0007,
     ElevationRequired       = 0x0008,
     UninstallerNotRegistered= 0x0009,
-    ChecksumMismatch        = 0x0010,
-#if DEBUG
-    ChecksumCalculationFail = 0x0090,
-#endif
+    ChecksumOperationFailed = 0x0010,
+    ChecksumMismatch        = 0x0011,
     // msi installation-related failures
     WindowsInstallerMiscError = 0x0100,
     // exe installation-related failures

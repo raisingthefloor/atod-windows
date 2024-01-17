@@ -341,6 +341,7 @@ public class Program
             switch (atodOperation!.Value)
             {
                 case AtodOperation.Values.CalculateChecksum:
+#if DEBUG
                     {
                         string fileFullPath;
                         switch (atodOperation.SourcePath!.Value)
@@ -377,7 +378,7 @@ public class Program
                             Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Checksum Calculation Failed");
                             Console.WriteLine();
                             Console.WriteLine("Checksum could not be calculated.");
-                            return (int)ExitCode.ChecksumCalculationFail;
+                            return (int)ExitCode.ChecksumOperationFailed;
                         }
                         var checksumAsByteArray = calculateChecksumResult.Value! switch
                         {
@@ -390,6 +391,9 @@ public class Program
                         progressBar.TrailingText = "Checksum: [" + checksumAsCsvString + "]";
                     }
                     break;
+#else
+                    throw new Exception("invalid code path");
+#endif
                 case AtodOperation.Values.Download:
                     {
                         string? destinationFullPath;
@@ -480,7 +484,7 @@ public class Program
                                 Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Checksum Verification Failed");
                                 Console.WriteLine();
                                 Console.WriteLine("Checksum on downloaded file could not be verified.");
-                                return (int)ExitCode.ChecksumCalculationFail;
+                                return (int)ExitCode.ChecksumOperationFailed;
                             }
                             var checksumMatches = verifyChecksumResult.Value!;
 
@@ -860,7 +864,7 @@ public class Program
                             Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Checksum Verification Failed");
                             Console.WriteLine();
                             Console.WriteLine("Checksum could not be verified.");
-                            return (int)ExitCode.ChecksumCalculationFail;
+                            return (int)ExitCode.ChecksumOperationFailed;
                         }
                         var checksumMatches = verifyChecksumResult.Value!;
 
