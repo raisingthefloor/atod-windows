@@ -36,5 +36,8 @@ internal enum ExitCode : int
     // msi installation-related failures
     WindowsInstallerMiscError = 0x0100,
     // exe installation-related failures
-    ExeInstallerMiscError   = 0x0200,
+    ExeInstallerMiscError     = 0x0200,
+    // non-msi uninstaller-related failures
+    RegistryUninstallerMiscError = 0x0300,
+    RegistryUninstallerMissing   = 0x0301,
 }

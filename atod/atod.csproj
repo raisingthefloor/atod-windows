@@ -22,6 +22,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Atod.Compression\Atod.Compression.csproj" />
 		<ProjectReference Include="..\Atod.Deployment.Msi\Atod.Deployment.Msi.csproj" />
+		<ProjectReference Include="..\Atod.Deployment.Uninstall\Atod.Deployment.Uninstall.csproj" />
 		<ProjectReference Include="..\Atod.Networking\Atod.Networking.csproj" />
 		<ProjectReference Include="..\Atod.WindowsNative\Atod.WindowsNative.csproj" />
 	</ItemGroup>

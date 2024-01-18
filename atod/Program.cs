@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 public class Program
@@ -63,7 +64,7 @@ public class Program
         var showGeneralHelp = false;
 
         AtodSequenceType? atodSequenceType = new();
-        List<AtodOperation> atodOperations = new();
+        List<IAtodOperation> atodOperations = new();
 
         ExitCode? exitCode = null;
 
@@ -123,7 +124,7 @@ public class Program
 
                                 atodOperations = new()
                                 {
-                                    AtodOperation.CalculateChecksum(AtodPath.None, fullPath, checksumAlgorithm!.Value)
+                                    new IAtodOperation.CalculateChecksum(AtodPath.None, fullPath, checksumAlgorithm!.Value)
                                 };
                                 atodSequenceType = AtodSequenceType.CalculateChecksum;
                             }
@@ -178,7 +179,7 @@ public class Program
                                         case "msi":
                                             atodOperations = new()
                                             {
-                                                AtodOperation.InstallMsi(AtodPath.None, fullPath, requiresElevation: true)
+                                                new IAtodOperation.InstallMsi(AtodPath.None, fullPath, RequiresElevation: true)
                                             };
                                             break;
                                         default:
@@ -293,7 +294,7 @@ public class Program
         bool atodOperationsRequireElevation = false;
         foreach (var operation in atodOperations)
         {
-            if (operation.RequiresElevation is not null && operation.RequiresElevation!.Value! == true)
+            if (operation.GetRequiresElevation() == true)
             {
                 atodOperationsRequireElevation = true;
             }
@@ -338,17 +339,17 @@ public class Program
         {
             var atodOperation = atodOperations[iOperation];
 
-            switch (atodOperation!.Value)
+            switch (atodOperation!)
             {
-                case AtodOperation.Values.CalculateChecksum:
+                case IAtodOperation.CalculateChecksum { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, ChecksumAlgorithm: AtodChecksumAlgorithm operationChecksumAlgorithm }:
 #if DEBUG
                     {
                         string fileFullPath;
-                        switch (atodOperation.SourcePath!.Value)
+                        switch (operationSourcePath.Value)
                         {
                             case AtodPath.Values.ExistingPathKey:
                                 string? existingPath;
-                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(operationSourcePath.Key!.ToLowerInvariant(), out existingPath);
                                 if (existingPathExists == false)
                                 {
                                     Console.WriteLine("Source path for file not found; this probably indicates a download failure (or internal failure).");
@@ -356,20 +357,19 @@ public class Program
                                     //
                                     return (int)ExitCode.FileNotFound;
                                 }
-                                fileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                fileFullPath = Path.Combine(existingPath!, operationFilename);
                                 break;
                             case AtodPath.Values.None:
-                                fileFullPath = atodOperation.Filename!;
+                                fileFullPath = operationFilename;
                                 break;
                             default:
                                 throw new Exception("unsupported choice");
 //                                throw new Exception("invalid code path");
                         }
-                        var checksumAlgorithm = atodOperation.ChecksumAlgorithm!.Value;
 
                         progressBar.TrailingText = "Calculating checksum...";
 
-                        var calculateChecksumResult = await Program.CalculateChecksumAsync(fileFullPath, checksumAlgorithm);
+                        var calculateChecksumResult = await Program.CalculateChecksumAsync(fileFullPath, operationChecksumAlgorithm);
                         if (calculateChecksumResult.IsError == true)
                         {
                             Debug.Assert(false, "Could not calculate checksum; this may indicate a cryptography library failure");
@@ -394,20 +394,20 @@ public class Program
 #else
                     throw new Exception("invalid code path");
 #endif
-                case AtodOperation.Values.Download:
+                case IAtodOperation.Download { Uri: Uri operationUri, DestinationPath: AtodPath operationDestinationPath, Filename: string operationFilename, Checksum: var operationChecksumAsNullable }:
                     {
                         string? destinationFullPath;
-                        switch (atodOperation.DestinationPath!.Value)
+                        switch (operationDestinationPath!.Value)
                         {
                             case AtodPath.Values.CreateTemporaryFolderForNewPathKey:
-                                var temporaryFolderKey = atodOperation.DestinationPath!.Key!.ToLowerInvariant();
+                                var temporaryFolderKey = operationDestinationPath.Key!.ToLowerInvariant();
                                 try
                                 {
                                     var tempDirectoryInfo = System.IO.Directory.CreateTempSubdirectory("atod_");
                                     atodAbsolutePathsWithLowercaseKeys[temporaryFolderKey] = tempDirectoryInfo.FullName!;
                                     newAbsolutePathsForTemporaryFolders.Add(tempDirectoryInfo.FullName!);
                                     //
-                                    destinationFullPath = Path.Combine(tempDirectoryInfo.FullName, atodOperation.Filename!);
+                                    destinationFullPath = Path.Combine(tempDirectoryInfo.FullName, operationFilename);
                                     newAbsolutePathsForTemporaryFiles.Add(destinationFullPath);
                                 }
                                 catch
@@ -457,7 +457,7 @@ public class Program
                             }
                         });
 
-                        var downloadFileResult = await Atod.Networking.DownloadUtils.DownloadFileAsync(atodOperation.Uri!, destinationFullPath!, false, progressUpdate);
+                        var downloadFileResult = await Atod.Networking.DownloadUtils.DownloadFileAsync(operationUri, destinationFullPath!, false, progressUpdate);
                         if (downloadFileResult.IsError == true)
                         {
                             Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Download Failed");
@@ -469,9 +469,9 @@ public class Program
                         }
 
                         // if a checksum was provided, verify it now
-                        if (atodOperation.Checksum is not null)
+                        if (operationChecksumAsNullable is not null)
                         {
-                            var checksum = atodOperation.Checksum!;
+                            var checksum = operationChecksumAsNullable!;
 
                             progressBar.TrailingText = "Verifying checksum...";
 
@@ -505,14 +505,14 @@ public class Program
                         progressBar.TrailingText = "Downloaded";
                     }
                     break;
-                case AtodOperation.Values.InstallExe:
+                case IAtodOperation.InstallExe { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, CommandLineArgs: var operationCommandLineArgsAsNullable, RequiresElevation: bool _ }:
                     {
                         string exeFileFullPath;
-                        switch (atodOperation.SourcePath!.Value)
+                        switch (operationSourcePath.Value)
                         {
                             case AtodPath.Values.ExistingPathKey:
                                 string? existingPath;
-                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(operationSourcePath.Key!.ToLowerInvariant(), out existingPath);
                                 if (existingPathExists == false)
                                 {
                                     Console.WriteLine("Source path for EXE not found; this probably indicates a download failure (or internal failure).");
@@ -520,10 +520,10 @@ public class Program
                                     //
                                     return (int)ExitCode.FileNotFound;
                                 }
-                                exeFileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                exeFileFullPath = Path.Combine(existingPath!, operationFilename);
                                 break;
                             case AtodPath.Values.None:
-                                exeFileFullPath = atodOperation.Filename!;
+                                exeFileFullPath = operationFilename;
                                 break;
                             default:
                                 throw new Exception("unsupported choice");
@@ -531,7 +531,7 @@ public class Program
                         }
                         //
                         // set up the command line arguments
-                        string? exeArguments = atodOperation.CommandLineArgs;
+                        string? exeArguments = operationCommandLineArgsAsNullable;
 
                         progressBar.TrailingText = "Installing";
 
@@ -591,14 +591,14 @@ public class Program
                         progressBar.TrailingText = "Installed";
                     }
                     break;
-                case AtodOperation.Values.InstallMsi:
+                case IAtodOperation.InstallMsi { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, RequiresElevation: bool _}:
                     {
                         string msiFileFullPath;
-                        switch (atodOperation.SourcePath!.Value)
+                        switch (operationSourcePath.Value)
                         {
                             case AtodPath.Values.ExistingPathKey:
                                 string? existingPath;
-                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(operationSourcePath.Key!.ToLowerInvariant(), out existingPath);
                                 if (existingPathExists == false)
                                 {
                                     Console.WriteLine("Source path for MSI not found; this probably indicates a download failure (or internal failure).");
@@ -606,10 +606,10 @@ public class Program
                                     //
                                     return (int)ExitCode.FileNotFound;
                                 }
-                                msiFileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                msiFileFullPath = Path.Combine(existingPath!, operationFilename);
                                 break;
                             case AtodPath.Values.None:
-                                msiFileFullPath = atodOperation.Filename!;
+                                msiFileFullPath = operationFilename;
                                 break;
                             default:
                                 throw new Exception("unsupported choice");
@@ -687,10 +687,118 @@ public class Program
                         }
                     }
                     break;
-                case AtodOperation.Values.Uninstall:
+                case IAtodOperation.UninstallUsingRegistryUninstallString { UninstallSubKeyName: string operationUninstallSubKeyName, OptionalSupplementalArgs: var operationOptionalAddedArgsAsNullable, RequiresElevation: _ }:
+                    {
+                        progressBar.TrailingText = "Uninstalling";
+
+                        // retrieve the UninstallRegistryEntry for this application
+                        var tryGetUninstallRegistryEntryResult = Atod.Deployment.Uninstall.UninstallRegistry.TryGetUninstallRegistryEntry(operationUninstallSubKeyName);
+                        if (tryGetUninstallRegistryEntryResult.IsError)
+                        {
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Uninstall registry key for this application is unaccessible or corrupted.");
+                            return (int)ExitCode.RegistryUninstallerMiscError;
+                        }
+                        if (tryGetUninstallRegistryEntryResult.Value is null)
+                        {
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Application instance was not found (i.e. product does not appear to be installed).");
+                            return (int)ExitCode.RegistryUninstallerMissing;
+                        }
+                        var uninstallRegistryEntry = tryGetUninstallRegistryEntryResult.Value!.Value;
+
+                        // NOTE: we prefer the "by convention" quiet uninstaller's QuietUninstallString, but we'll use the UninstallString as a backup
+                        string uninstallString = uninstallRegistryEntry.QuietUninstallString ?? uninstallRegistryEntry.UninstallString;
+
+                        // break UninstallString into executable and path
+                        var splitResult = Program.SplitUninstallStringIntoFilenameAndArgs(uninstallString);
+                        if (splitResult.IsError)
+                        {
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Uninstall registry key for this application is corrupted.");
+                            return (int)ExitCode.RegistryUninstallerMiscError;
+                        }
+                        string exeFileFullPath = splitResult.Value!.Filename;
+                        string? exeArguments = splitResult.Value!.Args;
+                        if (operationOptionalAddedArgsAsNullable is not null)
+                        {
+                            exeArguments = Program.AddSupplementalArgs(exeArguments, operationOptionalAddedArgsAsNullable!);
+                        }
+                        // NOTE: if our arguments are empty, change the value of exeArguments to null (so that we don't pass in an empty string arguments parameter)
+                        if (exeArguments.Trim() == "")
+                        {
+                            exeArguments = null;
+                        }
+
+                        System.Diagnostics.ProcessStartInfo startInfo;
+                        if (exeArguments is not null)
+                        {
+                            startInfo = new System.Diagnostics.ProcessStartInfo(exeFileFullPath, exeArguments!);
+                        }
+                        else
+                        {
+                            startInfo = new System.Diagnostics.ProcessStartInfo(exeFileFullPath);
+                        }
+                        startInfo.UseShellExecute = true;
+
+                        System.Diagnostics.Process? exeProcess;
+                        System.ComponentModel.Win32Exception? win32Exception = null;
+                        try
+                        {
+                            exeProcess = System.Diagnostics.Process.Start(startInfo);
+                        }
+                        catch (System.ComponentModel.Win32Exception ex)
+                        {
+                            exeProcess = null;
+                            win32Exception = ex;
+                        }
+                        //
+                        if (exeProcess is null)
+                        {
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Application could not be uninstalled.");
+                            if (win32Exception is not null)
+                            {
+                                Console.WriteLine("Win32 error code: " + win32Exception!.ErrorCode.ToString());
+                            }
+                            return (int)ExitCode.RegistryUninstallerMiscError;
+                        }
+
+                        await exeProcess!.WaitForExitAsync();
+
+                        var exeExitCode = exeProcess!.ExitCode;
+                        if (exeExitCode != 0)
+                        {
+                            Debug.Assert(false, "EXE exited with non-zero status code; make sure this is not a status code indicating a reboot requirement, etc.");
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Application could not be uninstalled.");
+                            Console.WriteLine("Uninstaller exit code: " + exeExitCode.ToString());
+                            return (int)ExitCode.RegistryUninstallerMiscError;
+                        }
+
+                        progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
+                        progressBar.TrailingText = "Uninstalled";
+                    }
+                    break;
+                case IAtodOperation.UninstallUsingWindowsInstaller { WindowsInstallerProductCode: Guid operationWindowsInstallerProductCode, RequiresElevation: bool _ }:
                     {
                         // resolve product name into product code
-                        var msiProductCode = atodOperation.WindowsInstallerProductCode!.Value;
+                        var msiProductCode = operationWindowsInstallerProductCode;
 
                         var commandLineSettings = new Dictionary<string, string>();
 
@@ -759,14 +867,14 @@ public class Program
                         }
                     }
                     break;
-                case AtodOperation.Values.Unzip:
+                case IAtodOperation.Unzip { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, DestinationPath: AtodPath operationDestinationPath }:
                     {
                         string zipFileFullPath;
-                        switch (atodOperation.SourcePath!.Value)
+                        switch (operationSourcePath.Value)
                         {
                             case AtodPath.Values.ExistingPathKey:
                                 string? existingPath;
-                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(operationSourcePath.Key!.ToLowerInvariant(), out existingPath);
                                 if (existingPathExists == false)
                                 {
                                     Console.WriteLine("Source path for MSI not found; this probably indicates a download failure (or internal failure).");
@@ -774,20 +882,20 @@ public class Program
                                     //
                                     return (int)ExitCode.FileNotFound;
                                 }
-                                zipFileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                zipFileFullPath = Path.Combine(existingPath!, operationFilename);
                                 break;
                             case AtodPath.Values.None:
-                                zipFileFullPath = atodOperation.Filename!;
+                                zipFileFullPath = operationFilename;
                                 break;
                             default:
                                 throw new Exception("unsupported choice");
 //                                throw new Exception("invalid code path");
                         }
                         string destinationFolderPath;
-                        switch (atodOperation.DestinationPath!.Value)
+                        switch (operationDestinationPath.Value)
                         {
                             case AtodPath.Values.CreateTemporaryFolderForNewPathKey:
-                                var temporaryFolderKey = atodOperation.DestinationPath!.Key!.ToLowerInvariant();
+                                var temporaryFolderKey = operationDestinationPath.Key!.ToLowerInvariant();
                                 try
                                 {
                                     var tempDirectoryInfo = System.IO.Directory.CreateTempSubdirectory("atod_");
@@ -827,14 +935,14 @@ public class Program
                         progressBar.TrailingText = "Files extracted";
                     }
                     break;
-                case AtodOperation.Values.VerifyChecksum:
+                case IAtodOperation.VerifyChecksum { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, Checksum: IAtodChecksum operationChecksum }:
                     {
                         string fileFullPath;
-                        switch (atodOperation.SourcePath!.Value)
+                        switch (operationSourcePath.Value)
                         {
                             case AtodPath.Values.ExistingPathKey:
                                 string? existingPath;
-                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(atodOperation.SourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(operationSourcePath.Key!.ToLowerInvariant(), out existingPath);
                                 if (existingPathExists == false)
                                 {
                                     Console.WriteLine("Source path for file not found; this probably indicates a download failure (or internal failure).");
@@ -842,20 +950,19 @@ public class Program
                                     //
                                     return (int)ExitCode.FileNotFound;
                                 }
-                                fileFullPath = Path.Combine(existingPath!, atodOperation.Filename!);
+                                fileFullPath = Path.Combine(existingPath!, operationFilename);
                                 break;
                             case AtodPath.Values.None:
-                                fileFullPath = atodOperation.Filename!;
+                                fileFullPath = operationFilename;
                                 break;
                             default:
                                 throw new Exception("unsupported choice");
 //                                throw new Exception("invalid code path");
                         }
-                        var checksum = atodOperation.Checksum!;
 
                         progressBar.TrailingText = "Verifying checksum...";
 
-                        var verifyChecksumResult = await Program.VerifyChecksumMatchesAsync(fileFullPath, checksum);
+                        var verifyChecksumResult = await Program.VerifyChecksumMatchesAsync(fileFullPath, operationChecksum);
                         if (verifyChecksumResult.IsError == true)
                         {
                             Debug.Assert(false, "Could not verify checksum; this may indicate a cryptography library failure");
@@ -1080,5 +1187,166 @@ public class Program
 
         var result = checksum.ChecksumEqual(verifyChecksum);
         return MorphicResult.OkResult(result);
+    }
+
+    private static MorphicResult<(string Filename, string Args), MorphicUnit> SplitUninstallStringIntoFilenameAndArgs(string uninstallString)
+    {
+        // in our initial implementation, we simply separate out the args after the first space character; if the filename is enclosed in double-quotes then we terminate it at its closing quotation marks
+        
+        var mutableUninstallString = uninstallString.TrimStart();
+        if (mutableUninstallString.Length == 0)
+        {
+            return MorphicResult.OkResult(("", ""));
+        }
+
+        string filename;
+        string args;
+
+        if (mutableUninstallString[0] == '"')
+        {
+            // filename is enclosed in double quotes
+            var indexOfClosingQuote = mutableUninstallString.IndexOf('"', 1);
+            if (indexOfClosingQuote >= 0)
+            {
+                filename = mutableUninstallString.Substring(1, indexOfClosingQuote - 1);
+                args = mutableUninstallString.Substring(indexOfClosingQuote + 1);
+            }
+            else
+            {
+                // opening double-quote did not have a closing double-quote to finish the pair; cmd.exe seems to allow this (and just ignores the missing closing quote), so we will too
+                filename = mutableUninstallString.Substring(1);
+                args = "";
+            }
+        }
+        else
+        {
+            var indexOfBackslash = mutableUninstallString.IndexOf('\\');
+            var indexOfSpace = mutableUninstallString.IndexOf(' ');
+            if (indexOfBackslash >= 0)
+            {
+                // NOTE: if the filename has backslashes in it but is not enclosed in double-quotes, then we assume the full string is the filename; if this causes us problems, then we could evaluate a strategy such as manually parsing the path and looking for folders and files with its name
+                filename = mutableUninstallString;
+                args = "";
+            }
+            else if (indexOfSpace < 0)
+            {
+                // no spaces; this must be a filename
+                filename = mutableUninstallString;
+                args = "";
+            }
+            else
+            {
+                // spaces in string; separate the filename and args by the index of that space
+                filename = mutableUninstallString.Substring(0, indexOfSpace);
+                args = mutableUninstallString.Substring(indexOfSpace + 1);
+            }
+        }
+
+        // trim any left-most whitespace from args
+        args = args.TrimStart();
+
+        var result = (filename, args);
+        return MorphicResult.OkResult(result);
+    }
+
+    private static string AddSupplementalArgs(string args, string[] supplementalArgs)
+    {
+        var result = args;
+        
+        // split our current args into a list
+        var existingArgs = Program.SplitArgsStringIntoList(args);
+
+        foreach (var supplementalArg in supplementalArgs)
+        {
+            // NOTE: we are doing a case-sensitive compare
+            if (args.Contains(supplementalArg) == false)
+            {
+                result += " " + supplementalArg;
+            }
+        }
+
+        result = result.TrimStart();
+        return result;
+    }
+
+    // see: https://web.archive.org/web/20171214211548/http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/ntcmds_shelloverview.mspx?mfr=true
+    private static List<string> SplitArgsStringIntoList(string args)
+    {
+        // NOTE: arguments must be contained in quotes if they contain &, |, (, ) or ^ -- or they can be prefixed by the escape character '^'
+        // NOTE: arguments must be contained in quotes if they contain spaces
+
+        var result = new List<string>();
+
+        int? startIndexOfQuotedArg = null;
+        StringBuilder currentArg = new();
+        for (var index = 0; index < args.Length; index += 1)
+        {
+            if (args[index] == '^')
+            {
+                if (args.Length > index + 1)
+                {
+                    // carat is an escape character; capture the FOLLOWING character and then skip both characters
+                    currentArg.Append(args[index + 1]);
+                    index += 1;
+                    continue;
+                }
+                else
+                {
+                    // carat is at end of sequence; gracefully fail by simply exiting and ignoring the trailing carat
+                    index += 1;
+                    continue;
+                }
+            }
+
+            if (args[index] == '"')
+            {
+                if (startIndexOfQuotedArg is null)
+                {
+                    // start of quoted argument
+                    startIndexOfQuotedArg = index;
+                    continue;
+                }
+                else
+                {
+                    // end of quoted argument
+                    result.Add(currentArg.ToString());
+                    currentArg = new();
+
+                    startIndexOfQuotedArg = null;
+                    continue;
+                }
+            }
+
+            if (args[index] == ' ')
+            {
+                if (currentArg.Length > 0)
+                {
+                    // end of current arg; do not capture space character
+                    result.Add(currentArg.ToString());
+                    currentArg = new();
+
+                    continue;
+                }
+                else
+                {
+                    // extra whitespace in between args; ignore
+                    continue;
+                }
+            }
+
+            // otherwise, just capture the character
+            currentArg.Append(args[index]);
+        }
+
+        if (startIndexOfQuotedArg is not null)
+        {
+            // if a quoted argument is missing its closing double quote, gracefully fail by capturing the quoted argument and assuming an implied final double-quote
+            result.Add(currentArg.ToString());
+            currentArg = new();
+
+            startIndexOfQuotedArg = null;
+        }
+
+        return result;
     }
 }

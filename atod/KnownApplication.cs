@@ -46,26 +46,26 @@ internal struct KnownApplication
         }
     }
 
-    public List<AtodOperation> GetInstallOperations()
+    public List<IAtodOperation> GetInstallOperations()
     {
-        List<AtodOperation> result;
+        List<IAtodOperation> result;
 
         switch (this.Id)
         {
             case IdValue.Nvda:
-                result = new List<AtodOperation>()
+                result = new List<IAtodOperation>()
                 {
-                    AtodOperation.Download(new Uri("https://www.nvaccess.org/download/nvda/releases/2023.3.1/nvda_2023.3.1.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "nvda_2023.3.1.exe", new IAtodChecksum.Sha256(new byte[] { 181, 55, 16, 36, 104, 67, 106, 185, 62, 15, 230, 60, 247, 140, 138, 220, 84, 66, 235, 190, 208, 88, 146, 119, 212, 92, 60, 185, 196, 239, 140, 114 })),
-                    AtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--minimal --install-silent", true),
+                    new IAtodOperation.Download(new Uri("https://www.nvaccess.org/download/nvda/releases/2023.3.1/nvda_2023.3.1.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "nvda_2023.3.1.exe", new IAtodChecksum.Sha256(new byte[] { 181, 55, 16, 36, 104, 67, 106, 185, 62, 15, 230, 60, 247, 140, 138, 220, 84, 66, 235, 190, 208, 88, 146, 119, 212, 92, 60, 185, 196, 239, 140, 114 })),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--minimal --install-silent", true),
                 };
                 break;
             case IdValue.ReadAndWrite:
-                result = new List<AtodOperation>()
+                result = new List<IAtodOperation>()
                 {
-                    AtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/us/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip", null), // US download MSI
-                    //AtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/uk/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip", null), // UK download MSI
-                    AtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "setup.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
-                    AtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi", requiresElevation: true),
+                    new IAtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/us/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip", null), // US download MSI
+                    //new AtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/uk/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip", null), // UK download MSI
+                    new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "setup.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi", RequiresElevation: true),
                 };
                 break;
             default:
@@ -75,20 +75,23 @@ internal struct KnownApplication
         return result;
     }
 
-    public List<AtodOperation>? GetUninstallOperations()
+    public List<IAtodOperation>? GetUninstallOperations()
     {
-        List<AtodOperation>? result;
+        List<IAtodOperation>? result;
 
         switch (this.Id)
         {
             case IdValue.Nvda:
-                // no silent uninstaller available
-                result = null;
+                // NOTE: NVDA does not include the "/S" option (for Nullsoft "SILENT") in their UninstallString, so we force-add it as a parameter; this is fragile, and it should be removed if a QuietUninstallString is present, etc.
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingRegistryUninstallString("NVDA", new string[] { "/S" }, RequiresElevation: true),
+                };
                 break;
             case IdValue.ReadAndWrite:
-                result = new List<AtodOperation>()
+                result = new List<IAtodOperation>()
                 {
-                    AtodOperation.Uninstall(this.GetWindowsInstallerProductCode()!.Value, requiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(this.GetWindowsInstallerProductCode()!.Value, RequiresElevation: true),
                 };
                 break;
             default:
