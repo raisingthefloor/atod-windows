@@ -61,9 +61,14 @@ internal struct KnownApplication
             case IdValue.Magic:
                 result = new List<IAtodOperation>()
                 {
-                    new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/magic/M15.0.2014.400-enu-x64.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", new IAtodChecksum.Sha256(new byte[] { 117, 43, 40, 31, 213, 216, 116, 36, 163, 80, 21, 225, 236, 198, 3, 98, 216, 80, 190, 74, 152, 147, 124, 179, 180, 103, 218, 218, 33, 248, 175, 208 })),
+                    // Intel 64-bit
+                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/magic/M15.0.2014.400-enu-x64.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", new IAtodChecksum.Sha256(new byte[] { 117, 43, 40, 31, 213, 216, 116, 36, 163, 80, 21, 225, 236, 198, 3, 98, 216, 80, 190, 74, 152, 147, 124, 179, 180, 103, 218, 218, 33, 248, 175, 208 })),
+                    new IAtodOperation.Download(new Uri("https://magic15.vfo.digital/1502013NT2244W/M15.0.2014.400-enu-x64.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", new IAtodChecksum.Sha256(new byte[] { 117, 43, 40, 31, 213, 216, 116, 36, 163, 80, 21, 225, 236, 198, 3, 98, 216, 80, 190, 74, 152, 147, 124, 179, 180, 103, 218, 218, 33, 248, 175, 208 })),
                     new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", "/type silent", STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
-                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/magic/M15.0.2014.400-enu-x86.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x86.exe", new IAtodChecksum.Sha256(new byte[] { 191, 242, 8, 62, 97, 92, 119, 166, 122, 208, 203, 88, 108, 200, 56, 65, 5, 197, 43, 69, 56, 82, 107, 0, 78, 111, 94, 99, 189, 235, 169, 128 })),
+                    //
+                    // Intel 32-bit
+                    ////new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/magic/M15.0.2014.400-enu-x86.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x86.exe", new IAtodChecksum.Sha256(new byte[] { 191, 242, 8, 62, 97, 92, 119, 166, 122, 208, 203, 88, 108, 200, 56, 65, 5, 197, 43, 69, 56, 82, 107, 0, 78, 111, 94, 99, 189, 235, 169, 128 })),
+                    //new IAtodOperation.Download(new Uri("https://magic15.vfo.digital/1502013NT2244W/M15.0.2014.400-enu-x86.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x86.exe", new IAtodChecksum.Sha256(new byte[] { 191, 242, 8, 62, 97, 92, 119, 166, 122, 208, 203, 88, 108, 200, 56, 65, 5, 197, 43, 69, 56, 82, 107, 0, 78, 111, 94, 99, 189, 235, 169, 128 })),
                     //new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "M15.0.2014.400-enu-x86.exe", "/type silent", STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                 };
                 break;
