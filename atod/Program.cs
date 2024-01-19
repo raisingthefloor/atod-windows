@@ -505,7 +505,7 @@ public class Program
                         progressBar.TrailingText = "Downloaded";
                     }
                     break;
-                case IAtodOperation.InstallExe { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, CommandLineArgs: var operationCommandLineArgsAsNullable, RequiresElevation: bool _ }:
+                case IAtodOperation.InstallExe { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, CommandLineArgs: var operationCommandLineArgsAsNullable, RebootRequiredExitCode: var rebootRequiredExitCodeAsNullable, RequiresElevation: bool _ }:
                     {
                         string exeFileFullPath;
                         switch (operationSourcePath.Value)
@@ -574,21 +574,32 @@ public class Program
 
                         await exeProcess!.WaitForExitAsync();
 
+                        var rebootRequiredFromOperation = false;
+
                         var exeExitCode = exeProcess!.ExitCode;
-                        if (exeExitCode != 0)
+                        if (rebootRequiredExitCodeAsNullable is not null && exeExitCode == rebootRequiredExitCodeAsNullable!.Value)
                         {
-                            Debug.Assert(false, "EXE exited with non-zero status code; make sure this is not a status code indicating a reboot requirement, etc.");
+                            rebootRequiredFromOperation = true;
+                            rebootRequiredAfterSequence = true;
+                        }
+                        else if (exeExitCode != 0)
+                        {
                             progressBar.Hide();
 
                             Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Installation Failed");
                             Console.WriteLine();
                             Console.WriteLine("Application could not be installed.");
                             Console.WriteLine("EXE installer exit code: " + exeExitCode.ToString());
+                            Debug.Assert(false, "EXE exited with non-zero status code; make sure this is not a status code indicating a reboot requirement, etc.");
                             return (int)ExitCode.ExeInstallerMiscError;
                         }
 
                         progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
-                        progressBar.TrailingText = "Installed";
+                        progressBar.TrailingText = rebootRequiredFromOperation switch
+                        {
+                            false => "Installed",
+                            true => "Reboot required to complete install",
+                        };
                     }
                     break;
                 case IAtodOperation.InstallMsi { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, RequiresElevation: bool _}:
@@ -687,7 +698,7 @@ public class Program
                         }
                     }
                     break;
-                case IAtodOperation.UninstallUsingRegistryUninstallString { UninstallSubKeyName: string operationUninstallSubKeyName, OptionalSupplementalArgs: var operationOptionalAddedArgsAsNullable, RequiresElevation: _ }:
+                case IAtodOperation.UninstallUsingRegistryUninstallString { UninstallSubKeyName: string operationUninstallSubKeyName, OptionalSupplementalArgs: var operationOptionalAddedArgsAsNullable, RebootRequiredExitCode: var rebootRequiredExitCodeAsNullable, RequiresElevation: _ }:
                     {
                         progressBar.TrailingText = "Uninstalling";
 
@@ -778,21 +789,32 @@ public class Program
 
                         await exeProcess!.WaitForExitAsync();
 
+                        var rebootRequiredFromOperation = false;
+
                         var exeExitCode = exeProcess!.ExitCode;
-                        if (exeExitCode != 0)
+                        if (rebootRequiredExitCodeAsNullable is not null && exeExitCode == rebootRequiredExitCodeAsNullable!.Value)
                         {
-                            Debug.Assert(false, "EXE exited with non-zero status code; make sure this is not a status code indicating a reboot requirement, etc.");
+                            rebootRequiredFromOperation = true;
+                            rebootRequiredAfterSequence = true;
+                        }
+                        else if (exeExitCode != 0)
+                        {
                             progressBar.Hide();
 
                             Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
                             Console.WriteLine();
                             Console.WriteLine("Application could not be uninstalled.");
                             Console.WriteLine("Uninstaller exit code: " + exeExitCode.ToString());
+                            Debug.Assert(false, "EXE exited with non-zero status code; make sure this is not a status code indicating a reboot requirement, etc.");
                             return (int)ExitCode.RegistryUninstallerMiscError;
                         }
 
                         progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
-                        progressBar.TrailingText = "Uninstalled";
+                        progressBar.TrailingText = rebootRequiredFromOperation switch
+                        {
+                            false => "Uninstalled",
+                            true => "Reboot required to complete uninstall",
+                        };
                     }
                     break;
                 case IAtodOperation.UninstallUsingWindowsInstaller { WindowsInstallerProductCode: Guid operationWindowsInstallerProductCode, RequiresElevation: bool _ }:
@@ -837,6 +859,10 @@ public class Program
                                 }
                             }
                         };
+
+                        // suppress reboots
+                        // NOTE: this should be a standard MSI parameter, but if we find MSIs where it this causes issues or is not supported we will need to revisit this flag
+                        commandLineSettings.Add("REBOOT", "ReallySuppress");
 
                         var uninstallResult = await windowsInstaller.UninstallAsync(msiProductCode, commandLineSettings);
                         if (uninstallResult.IsError == true)

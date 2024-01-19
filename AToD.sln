@@ -15,7 +15,7 @@ Project("{B7DD6F7E-DEF8-4E67-B5B7-07EF123DB6F0}") = "AtodSetup", "AtodSetup\Atod
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Atod.WindowsNative", "Atod.WindowsNative\Atod.WindowsNative.csproj", "{5367FC42-E7EA-4863-84C9-91BD507C6702}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atod.Deployment.Uninstall", "Atod.Deployment.Uninstall\Atod.Deployment.Uninstall.csproj", "{08B5DDAB-C07B-46D2-91EB-C93CD0C097DA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Atod.Deployment.Uninstall", "Atod.Deployment.Uninstall\Atod.Deployment.Uninstall.csproj", "{08B5DDAB-C07B-46D2-91EB-C93CD0C097DA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

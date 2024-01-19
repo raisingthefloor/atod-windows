@@ -24,6 +24,7 @@ namespace Atod.Deployment.Uninstall;
 // see: https://web.archive.org/web/20061222030632/http://msdn.microsoft.com/library/en-us/msi/setup/uninstall_registry_key.asp
 // see: https://web.archive.org/web/20150113042836/http://msdn.microsoft.com/en-us/library/aa368032(v%3Dvs.85).aspx
 // see: https://web.archive.org/web/20150112060139/http://msdn.microsoft.com/en-us/library/aa372105(v=vs.85).aspx
+// see: https://learn.microsoft.com/en-us/windows/win32/msi/uninstall-registry-key
 //
 // Historical notes (on why only "DisplayName" and "UninstallPath" were originally required)
 // see: https://web.archive.org/web/20141021085755/http://technet.microsoft.com/en-us/magazine/gg558108.aspx

@@ -21,16 +21,23 @@ namespace Atod;
 
 internal struct KnownApplicationProductCode
 {
+    // main products
     public static readonly Guid READ_AND_WRITE = new Guid(0x355AB00F, 0x48E8, 0x474E, 0xAC, 0xC4, 0xD9, 0x17, 0xBA, 0xFA, 0x4D, 0x58); // {355AB00F-48E8-474E-ACC4-D917BAFA4D58}
 
-    public static Guid? TryFromProductName(string productName)
-    {
-        switch (productName.ToLowerInvariant())
-        {
-            case "readandwrite":
-                return KnownApplicationProductCode.READ_AND_WRITE;
-            default:
-                return null;
-        }
-    }
+    // components
+    public static readonly Guid FREEDOM_SCIENTIFIC_MAGIC_EXTERNAL_VIDEO_INTERFACE = Guid.Parse("{CBABC63D-8FF4-11E2-8181-B8AC6F9E17F4}"); // {CBABC63D-8FF4-11E2-8181-B8AC6F9E17F4}
+    public static readonly Guid FREEDOM_SCIENTIFIC_MAGIC_TRAINING_TABLE_OF_CONTENTS_DAISY_FILES = Guid.Parse("{E3475DD5-5EB4-4A80-A323-C2C580E55400}"); // {E3475DD5-5EB4-4A80-A323-C2C580E55400}
+    public static readonly Guid FREEDOM_SCIENTIFIC_TALKING_INSTALLER_18_0 = Guid.Parse("{209841A6-CBAD-4042-8E92-64E76A064288}"); // {209841A6-CBAD-4042-8E92-64E76A064288}
+    public static readonly Guid FREEDOM_SCIENTIFIC_VIDEO_ACCESSIBILITY = Guid.Parse("{38464CAB-C140-4C39-BE4C-C68D062130DA}"); // {38464CAB-C140-4C39-BE4C-C68D062130DA}
+
+    //public static Guid? TryFromProductName(string productName)
+    //{
+    //    switch (productName.ToLowerInvariant())
+    //    {
+    //        case "readandwrite":
+    //            return KnownApplicationProductCode.READ_AND_WRITE;
+    //        default:
+    //            return null;
+    //    }
+    //}
 }
