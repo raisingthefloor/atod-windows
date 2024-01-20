@@ -24,27 +24,31 @@ internal struct KnownApplication
 {
     public enum IdValue
     {
+        AutoHotkey,
         Dragger,
         Magic,
         Nvda,
         PurpleP3,
         ReadAndWrite,
-        Softype,
+        SofType,
     }
 
     public readonly KnownApplication.IdValue Id { get; init; }
 
+    public static readonly KnownApplication AUTOHOTKEY = new() {  Id = IdValue.AutoHotkey };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
     public static readonly KnownApplication PURPLE_P3 = new() { Id = IdValue.PurpleP3 };
     public static readonly KnownApplication READ_AND_WRITE = new() { Id = IdValue.ReadAndWrite };
-    public static readonly KnownApplication SOFTYPE = new() { Id = IdValue.Softype };
+    public static readonly KnownApplication SOFTYPE = new() { Id = IdValue.SofType };
 
     public static KnownApplication? TryFromProductName(string applicationName)
     {
         switch (applicationName.ToLowerInvariant())
         {
+            case "autohotkey":
+                return KnownApplication.AUTOHOTKEY;
             case "dragger":
                 return KnownApplication.DRAGGER;
             case "magic":
@@ -70,13 +74,22 @@ internal struct KnownApplication
 
         switch (this.Id)
         {
+            case IdValue.AutoHotkey:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/autohotkey/AutoHotkey_2.0.11_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", new IAtodChecksum.Sha256(new byte[] { 81, 10, 131, 59, 221, 15, 137, 108, 195, 152, 234, 174, 79, 244, 117, 245, 183, 207, 227, 118, 73, 239, 191, 100, 123, 80, 210, 30, 68, 35, 148, 185 })),
+                    // NOTE: we had problems with the AutoHotkey CDN returning HTTP 403 in testing; for now, we're using the AToD CDN instead
+                    //new IAtodOperation.Download(new Uri("https://www.autohotkey.com/download/2.0/AutoHotkey_2.0.11_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", new IAtodChecksum.Sha256(new byte[] { 81, 10, 131, 59, 221, 15, 137, 108, 195, 152, 234, 174, 79, 244, 117, 245, 183, 207, 227, 118, 73, 239, 191, 100, 123, 80, 210, 30, 68, 35, 148, 185 })),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", "/silent", null, true),
+                };
+                break;
             case IdValue.Dragger:
                 result = new List<IAtodOperation>()
                 {
                     // Intel 32-bit (also works on 64-bit)
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/dragger/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256(new byte[] { 192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232 })),
                     new IAtodOperation.Download(new Uri("https://orin.com/binaries/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256(new byte[] { 192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", "/qn", STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", "/qn", null, true),
                 };
                 break;
             case IdValue.Magic:
@@ -118,13 +131,13 @@ internal struct KnownApplication
                     new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi", null, RequiresElevation: true),
                 };
                 break;
-            case IdValue.Softype:
+            case IdValue.SofType:
                 result = new List<IAtodOperation>()
                 {
                     // Intel 32-bit (also works on 64-bit)
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/softype/SofTypeSetup5.0.1074.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", new IAtodChecksum.Sha256(new byte[] { 7, 194, 43, 36, 173, 85, 39, 1, 90, 164, 199, 126, 119, 42, 88, 220, 237, 100, 180, 138, 132, 56, 211, 126, 203, 95, 151, 150, 184, 245, 123, 31 })),
                     new IAtodOperation.Download(new Uri("https://orin.com/binaries/SofTypeSetup5.0.1074.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", new IAtodChecksum.Sha256(new byte[] { 7, 194, 43, 36, 173, 85, 39, 1, 90, 164, 199, 126, 119, 42, 88, 220, 237, 100, 180, 138, 132, 56, 211, 126, 203, 95, 151, 150, 184, 245, 123, 31 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", "/qn", STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", "/qn", null, true),
                 };
                 break;
             default:
@@ -142,6 +155,14 @@ internal struct KnownApplication
 
         switch (this.Id)
         {
+            case IdValue.AutoHotkey:
+                // NOTE: AutoHotkey has a "QuietUninstallString" registry entry, so we don't need to pass in "/silent" as a flag
+                result = new List<IAtodOperation>()
+                {
+//                    new IAtodOperation.UninstallUsingRegistryUninstallString("AutoHotkey", new string[] { "/silent" }, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingRegistryUninstallString("AutoHotkey", null, null, RequiresElevation: true),
+                };
+                break;
             case IdValue.Dragger:
                 result = new List<IAtodOperation>()
                 {
@@ -180,7 +201,7 @@ internal struct KnownApplication
                     new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.READ_AND_WRITE, null, RequiresElevation: true),
                 };
                 break;
-            case IdValue.Softype:
+            case IdValue.SofType:
                 result = new List<IAtodOperation>()
                 {
                     new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.SOFTYPE, null, RequiresElevation: true),
