@@ -29,6 +29,7 @@ internal struct KnownApplication
         CameraMouse,
         ClaroRead,
         ClaroReadSe,
+        ClickNType,
         Dragger,
         Magic,
         Nvda,
@@ -44,6 +45,7 @@ internal struct KnownApplication
     public static readonly KnownApplication CAMERA_MOUSE = new() { Id = IdValue.CameraMouse };
     public static readonly KnownApplication CLAROREAD = new() { Id = IdValue.ClaroRead };
     public static readonly KnownApplication CLAROREAD_SE = new() { Id = IdValue.ClaroReadSe };
+    public static readonly KnownApplication CLICK_N_TYPE = new() { Id = IdValue.ClickNType };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
@@ -65,6 +67,8 @@ internal struct KnownApplication
                 return KnownApplication.CLAROREAD;
             case "claroreadse":
                 return KnownApplication.CLAROREAD_SE;
+            case "clickntype":
+                return KnownApplication.CLICK_N_TYPE;
             case "dragger":
                 return KnownApplication.DRAGGER;
             case "magic":
@@ -134,6 +138,14 @@ internal struct KnownApplication
                     new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "ClaroReadSE-12.0.29-auth.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                     new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ClaroReadSE-int-12.0.29-auth.msi", null, RequiresElevation: true),
                     new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ScanScreenPlus-int-2.2.4-net.msi", null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.ClickNType:
+                // NOTE: this MSI is not digitally signed and should not be included in the catalog until it can be authenticated (and even then, it should probably be forced to use UAC individually for consumers)
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/clickntype/CNTsetup.msi"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CNTsetup.msi", new IAtodChecksum.Sha256(new byte[] { 247, 39, 177, 189, 83, 5, 117, 0, 156, 194, 197, 39, 178, 75, 17, 158, 11, 182, 44, 216, 240, 103, 55, 228, 156, 122, 103, 243, 197, 141, 49, 102 })),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("downloadfolder"), "CNTsetup.msi", null, RequiresElevation: true),
                 };
                 break;
             case IdValue.Dragger:
@@ -247,6 +259,12 @@ internal struct KnownApplication
                 {
                     new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLARO_SOFTWARE_SCAN_SCREEN_PLUS, null, RequiresElevation: true),
                     new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLARO_SOFTWARE_CLAROREAD_SE, null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.ClickNType:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLICK_N_TYPE, null, RequiresElevation: true),
                 };
                 break;
             case IdValue.Dragger:

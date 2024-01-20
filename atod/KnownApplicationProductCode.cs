@@ -22,6 +22,7 @@ namespace Atod;
 internal struct KnownApplicationProductCode
 {
     // main products
+    public static readonly Guid CLICK_N_TYPE = Guid.Parse("{CC02581D-B1F9-4B22-8E82-024B9D8EB702}"); // {CC02581D-B1F9-4B22-8E82-024B9D8EB702}
     public static readonly Guid DRAGGER = Guid.Parse("{EC8EF634-CE16-4134-B719-CAEA072E5656}"); // {EC8EF634-CE16-4134-B719-CAEA072E5656}
     public static readonly Guid PURPLE_P3 = Guid.Parse("{8B1DFBBC-E163-4099-A23B-0B52A0ADE4BC}"); // {8B1DFBBC-E163-4099-A23B-0B52A0ADE4BC}
     public static readonly Guid READ_AND_WRITE = new Guid(0x355AB00F, 0x48E8, 0x474E, 0xAC, 0xC4, 0xD9, 0x17, 0xBA, 0xFA, 0x4D, 0x58); // {355AB00F-48E8-474E-ACC4-D917BAFA4D58}
