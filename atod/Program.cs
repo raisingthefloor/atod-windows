@@ -627,7 +627,7 @@ public class Program
 //                                throw new Exception("invalid code path");
                         }
                         //
-                        // set up the command line settings (i.e. installer properties, etc.)
+                        // set up the property settings (i.e. installer properties, etc.)
                         var propertySettings = new Dictionary<string, string>();
                         if (propertySettingsAsNullable is not null)
                         {
@@ -639,6 +639,7 @@ public class Program
                         }
                         //
                         // suppress all reboot prompts and the actual reboots; this will cause the operation to return ERROR_SUCCESS_REBOOT_REQUIRED instead of ERROR_SUCCESS if a reboot is required
+                        // NOTE: this should be a standard MSI parameter, but if we find MSIs where it this causes issues or is not supported we will need to revisit this flag
                         propertySettings.Add("REBOOT", "ReallySuppress");
 
                         var windowsInstaller = new Atod.Deployment.Msi.WindowsInstaller();
@@ -825,12 +826,26 @@ public class Program
                         };
                     }
                     break;
-                case IAtodOperation.UninstallUsingWindowsInstaller { WindowsInstallerProductCode: Guid operationWindowsInstallerProductCode, RequiresElevation: bool _ }:
+                case IAtodOperation.UninstallUsingWindowsInstaller { WindowsInstallerProductCode: Guid operationWindowsInstallerProductCode, PropertySettings: var propertySettingsAsNullable, RequiresElevation: bool _ }:
                     {
                         // resolve product name into product code
                         var msiProductCode = operationWindowsInstallerProductCode;
 
-                        var commandLineSettings = new Dictionary<string, string>();
+                        //
+                        // set up the property settings (i.e. installer properties, etc.)
+                        var propertySettings = new Dictionary<string, string>();
+                        if (propertySettingsAsNullable is not null)
+                        {
+                            foreach (var (property, value) in propertySettingsAsNullable)
+                            {
+                                propertySettings.Add(property, value);
+                            }
+                            propertySettings = propertySettingsAsNullable!;
+                        }
+                        //
+                        // suppress all reboot prompts and the actual reboots; this will cause the operation to return ERROR_SUCCESS_REBOOT_REQUIRED instead of ERROR_SUCCESS if a reboot is required
+                        // NOTE: this should be a standard MSI parameter, but if we find MSIs where it this causes issues or is not supported we will need to revisit this flag
+                        propertySettings.Add("REBOOT", "ReallySuppress");
 
                         var windowsInstaller = new Atod.Deployment.Msi.WindowsInstaller();
 
@@ -868,11 +883,7 @@ public class Program
                             }
                         };
 
-                        // suppress reboots
-                        // NOTE: this should be a standard MSI parameter, but if we find MSIs where it this causes issues or is not supported we will need to revisit this flag
-                        commandLineSettings.Add("REBOOT", "ReallySuppress");
-
-                        var uninstallResult = await windowsInstaller.UninstallAsync(msiProductCode, commandLineSettings);
+                        var uninstallResult = await windowsInstaller.UninstallAsync(msiProductCode, propertySettings);
                         if (uninstallResult.IsError == true)
                         {
                             progressBar.Hide();
