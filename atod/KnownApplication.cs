@@ -25,6 +25,7 @@ internal struct KnownApplication
     public enum IdValue
     {
         AutoHotkey,
+        BuildABoard,
         Dragger,
         Magic,
         Nvda,
@@ -36,6 +37,7 @@ internal struct KnownApplication
     public readonly KnownApplication.IdValue Id { get; init; }
 
     public static readonly KnownApplication AUTOHOTKEY = new() {  Id = IdValue.AutoHotkey };
+    public static readonly KnownApplication BUILD_A_BOARD = new() { Id = IdValue.BuildABoard };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
@@ -49,6 +51,8 @@ internal struct KnownApplication
         {
             case "autohotkey":
                 return KnownApplication.AUTOHOTKEY;
+            case "buildaboard":
+                return KnownApplication.BUILD_A_BOARD;
             case "dragger":
                 return KnownApplication.DRAGGER;
             case "magic":
@@ -81,6 +85,14 @@ internal struct KnownApplication
                     // NOTE: we had problems with the AutoHotkey CDN returning HTTP 403 in testing; for now, we're using the AToD CDN instead
                     //new IAtodOperation.Download(new Uri("https://www.autohotkey.com/download/2.0/AutoHotkey_2.0.11_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", new IAtodChecksum.Sha256(new byte[] { 81, 10, 131, 59, 221, 15, 137, 108, 195, 152, 234, 174, 79, 244, 117, 245, 183, 207, 227, 118, 73, 239, 191, 100, 123, 80, 210, 30, 68, 35, 148, 185 })),
                     new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", "/silent", null, true),
+                };
+                break;
+            case IdValue.BuildABoard:
+                result = new List<IAtodOperation>()
+                {
+                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/buildaboard/bab220r7_win_7-11.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "bab220r7_win_7-11.exe", new IAtodChecksum.Sha256(new byte[] { 5, 119, 199, 0, 179, 224, 50, 132, 212, 73, 223, 118, 101, 145, 65, 143, 217, 30, 217, 149, 1, 160, 175, 154, 163, 91, 40, 217, 177, 212, 230, 61 })),
+                    new IAtodOperation.Download(new Uri("https://www.imgpresents.com/downloads/secure/bab220r7_win_7-11.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "bab220r7_win_7-11.exe", new IAtodChecksum.Sha256(new byte[] { 5, 119, 199, 0, 179, 224, 50, 132, 212, 73, 223, 118, 101, 145, 65, 143, 217, 30, 217, 149, 1, 160, 175, 154, 163, 91, 40, 217, 177, 212, 230, 61 })),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "bab220r7_win_7-11.exe", "/Q", null, true),
                 };
                 break;
             case IdValue.Dragger:
@@ -162,6 +174,15 @@ internal struct KnownApplication
 //                    new IAtodOperation.UninstallUsingRegistryUninstallString("AutoHotkey", new string[] { "/silent" }, null, RequiresElevation: true),
                     new IAtodOperation.UninstallUsingRegistryUninstallString("AutoHotkey", null, null, RequiresElevation: true),
                 };
+                break;
+            case IdValue.BuildABoard:
+                // as of 2024-01-19, there is no silent uninstall available for Build-A-Board
+                result = null;
+                //result = new List<IAtodOperation>()
+                //{
+                //    // NOTE: the corresponding UninstallString (as of 2024-01-19) was "C:\Program Files (x86)\Build-A-Board\BIN\IMGUTIL.exe Uninstall12401", with no silent uninstallation option
+                //    new IAtodOperation.UninstallUsingRegistryUninstallString("Build-A-Board", null, null, RequiresElevation: true),
+                //};
                 break;
             case IdValue.Dragger:
                 result = new List<IAtodOperation>()
