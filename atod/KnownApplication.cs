@@ -26,6 +26,7 @@ internal struct KnownApplication
     {
         Magic,
         Nvda,
+        PurpleP3,
         ReadAndWrite,
     }
 
@@ -33,6 +34,7 @@ internal struct KnownApplication
 
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
+    public static readonly KnownApplication PURPLE_P3 = new() { Id = IdValue.PurpleP3 };
     public static readonly KnownApplication READ_AND_WRITE = new() { Id = IdValue.ReadAndWrite };
 
     public static KnownApplication? TryFromProductName(string applicationName)
@@ -43,6 +45,8 @@ internal struct KnownApplication
                 return KnownApplication.MAGIC;
             case "nvda":
                 return KnownApplication.NVDA;
+            case "purplep3":
+                return KnownApplication.PURPLE_P3;
             case "readandwrite":
                 return KnownApplication.READ_AND_WRITE;
             default:
@@ -79,13 +83,22 @@ internal struct KnownApplication
                     new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--minimal --install-silent", null, true),
                 };
                 break;
+            case IdValue.PurpleP3:
+                result = new List<IAtodOperation>()
+                {
+                    // Intel 64-bit (presumably, based on the 64b filename)
+                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/purple/Purple_P3_9.6.1-3513-64b.msi"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "Purple_P3_9.6.1-3513-64b.msi", new IAtodChecksum.Sha256(new byte[] { 150, 220, 62, 126, 42, 170, 35, 35, 144, 175, 63, 143, 147, 215, 67, 168, 203, 118, 93, 241, 10, 254, 67, 224, 147, 168, 255, 220, 225, 167, 117, 2 })),
+                    new IAtodOperation.Download(new Uri("https://s3.amazonaws.com/PurpleDownloads/P3/Purple_P3_9.6.1-3513-64b.msi"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "Purple_P3_9.6.1-3513-64b.msi", new IAtodChecksum.Sha256(new byte[] { 150, 220, 62, 126, 42, 170, 35, 35, 144, 175, 63, 143, 147, 215, 67, 168, 203, 118, 93, 241, 10, 254, 67, 224, 147, 168, 255, 220, 225, 167, 117, 2 })),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("downloadfolder"), "Purple_P3_9.6.1-3513-64b.msi", new() { { "WRAPPED_ARGUMENTS", "\"--mode unattended\"" } }, RequiresElevation: true),
+                };
+                break;
             case IdValue.ReadAndWrite:
                 result = new List<IAtodOperation>()
                 {
                     new IAtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/us/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip", null), // US download MSI
                     //new AtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/uk/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip", null), // UK download MSI
                     new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "setup.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
-                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi", RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi", null, RequiresElevation: true),
                 };
                 break;
             default:
@@ -99,7 +112,7 @@ internal struct KnownApplication
     {
         List<IAtodOperation>? result;
 
-        const int STANDARD_REBOOT_REQUIRED_EXIT_CODE = unchecked((int)(uint)PInvoke.Win32ErrorCode.ERROR_SUCCESS_REBOOT_REQUIRED);
+//        const int STANDARD_REBOOT_REQUIRED_EXIT_CODE = unchecked((int)(uint)PInvoke.Win32ErrorCode.ERROR_SUCCESS_REBOOT_REQUIRED);
 
         switch (this.Id)
         {
@@ -119,6 +132,12 @@ internal struct KnownApplication
                 result = new List<IAtodOperation>()
                 {
                     new IAtodOperation.UninstallUsingRegistryUninstallString("NVDA", new string[] { "/S" }, null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.PurpleP3:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingRegistryUninstallString("Purple P3 9.6.1-3513", new string[] { "--mode unattended" }, null, RequiresElevation: true),
                 };
                 break;
             case IdValue.ReadAndWrite:

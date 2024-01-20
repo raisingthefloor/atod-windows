@@ -179,7 +179,7 @@ public class Program
                                         case "msi":
                                             atodOperations = new()
                                             {
-                                                new IAtodOperation.InstallMsi(AtodPath.None, fullPath, RequiresElevation: true)
+                                                new IAtodOperation.InstallMsi(AtodPath.None, fullPath, null, RequiresElevation: true)
                                             };
                                             break;
                                         default:
@@ -602,7 +602,7 @@ public class Program
                         };
                     }
                     break;
-                case IAtodOperation.InstallMsi { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, RequiresElevation: bool _}:
+                case IAtodOperation.InstallMsi { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, PropertySettings: var propertySettingsAsNullable, RequiresElevation: bool _}:
                     {
                         string msiFileFullPath;
                         switch (operationSourcePath.Value)
@@ -628,10 +628,18 @@ public class Program
                         }
                         //
                         // set up the command line settings (i.e. installer properties, etc.)
-                        var commandLineSettings = new Dictionary<string, string>();
+                        var propertySettings = new Dictionary<string, string>();
+                        if (propertySettingsAsNullable is not null)
+                        {
+                            foreach (var (property, value) in propertySettingsAsNullable)
+                            {
+                                propertySettings.Add(property, value);
+                            }
+                            propertySettings = propertySettingsAsNullable!;
+                        }
                         //
                         // suppress all reboot prompts and the actual reboots; this will cause the operation to return ERROR_SUCCESS_REBOOT_REQUIRED instead of ERROR_SUCCESS if a reboot is required
-                        commandLineSettings.Add("REBOOT", "ReallySuppress");
+                        propertySettings.Add("REBOOT", "ReallySuppress");
 
                         var windowsInstaller = new Atod.Deployment.Msi.WindowsInstaller();
 
@@ -669,7 +677,7 @@ public class Program
                             }
                         };
 
-                        var installResult = await windowsInstaller.InstallAsync(msiFileFullPath, commandLineSettings);
+                        var installResult = await windowsInstaller.InstallAsync(msiFileFullPath, propertySettings);
                         if (installResult.IsError == true)
                         {
                             progressBar.Hide();
