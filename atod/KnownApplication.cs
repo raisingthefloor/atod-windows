@@ -26,6 +26,7 @@ internal struct KnownApplication
     {
         AutoHotkey,
         BuildABoard,
+        CameraMouse,
         Dragger,
         Magic,
         Nvda,
@@ -38,6 +39,7 @@ internal struct KnownApplication
 
     public static readonly KnownApplication AUTOHOTKEY = new() {  Id = IdValue.AutoHotkey };
     public static readonly KnownApplication BUILD_A_BOARD = new() { Id = IdValue.BuildABoard };
+    public static readonly KnownApplication CAMERA_MOUSE = new() { Id = IdValue.CameraMouse };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
@@ -53,6 +55,8 @@ internal struct KnownApplication
                 return KnownApplication.AUTOHOTKEY;
             case "buildaboard":
                 return KnownApplication.BUILD_A_BOARD;
+            case "cameramouse":
+                return KnownApplication.CAMERA_MOUSE;
             case "dragger":
                 return KnownApplication.DRAGGER;
             case "magic":
@@ -93,6 +97,14 @@ internal struct KnownApplication
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/buildaboard/bab220r7_win_7-11.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "bab220r7_win_7-11.exe", new IAtodChecksum.Sha256(new byte[] { 5, 119, 199, 0, 179, 224, 50, 132, 212, 73, 223, 118, 101, 145, 65, 143, 217, 30, 217, 149, 1, 160, 175, 154, 163, 91, 40, 217, 177, 212, 230, 61 })),
                     new IAtodOperation.Download(new Uri("https://www.imgpresents.com/downloads/secure/bab220r7_win_7-11.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "bab220r7_win_7-11.exe", new IAtodChecksum.Sha256(new byte[] { 5, 119, 199, 0, 179, 224, 50, 132, 212, 73, 223, 118, 101, 145, 65, 143, 217, 30, 217, 149, 1, 160, 175, 154, 163, 91, 40, 217, 177, 212, 230, 61 })),
                     new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "bab220r7_win_7-11.exe", "/Q", null, true),
+                };
+                break;
+            case IdValue.CameraMouse:
+                result = new List<IAtodOperation>()
+                {
+                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/cameramouse/CameraMouse2018Installer.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CameraMouse2018Installer.exe", new IAtodChecksum.Sha256(new byte[] { 46, 79, 235, 219, 64, 193, 9, 39, 54, 33, 199, 223, 31, 66, 226, 80, 196, 144, 214, 172, 6, 147, 65, 80, 239, 220, 234, 126, 200, 111, 68, 52 })),
+                    new IAtodOperation.Download(new Uri("http://www.cameramouse.org/downloads/CameraMouse2018Installer.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CameraMouse2018Installer.exe", new IAtodChecksum.Sha256(new byte[] { 46, 79, 235, 219, 64, 193, 9, 39, 54, 33, 199, 223, 31, 66, 226, 80, 196, 144, 214, 172, 6, 147, 65, 80, 239, 220, 234, 126, 200, 111, 68, 52 })),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "CameraMouse2018Installer.exe", "/VERYSILENT", null, true),
                 };
                 break;
             case IdValue.Dragger:
@@ -183,6 +195,13 @@ internal struct KnownApplication
                 //    // NOTE: the corresponding UninstallString (as of 2024-01-19) was "C:\Program Files (x86)\Build-A-Board\BIN\IMGUTIL.exe Uninstall12401", with no silent uninstallation option
                 //    new IAtodOperation.UninstallUsingRegistryUninstallString("Build-A-Board", null, null, RequiresElevation: true),
                 //};
+                break;
+            case IdValue.CameraMouse:
+                // NOTE: CameraMouse has a "QuietUninstallString" registry entry, but it uses "/SILENT" instead of "/VERYSILENT" so we supplement it with "/VERYSILENT"
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingRegistryUninstallString("{F5E6727D-0969-4C4A-A669-71F1A3913A03}}_is1", new string[] { "/VERYSILENT" }, null, RequiresElevation: true),
+                };
                 break;
             case IdValue.Dragger:
                 result = new List<IAtodOperation>()
