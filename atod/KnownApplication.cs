@@ -30,6 +30,7 @@ internal struct KnownApplication
         ClaroRead,
         ClaroReadSe,
         ClickNType,
+        ComfortOsk,
         Dragger,
         Magic,
         Nvda,
@@ -46,6 +47,7 @@ internal struct KnownApplication
     public static readonly KnownApplication CLAROREAD = new() { Id = IdValue.ClaroRead };
     public static readonly KnownApplication CLAROREAD_SE = new() { Id = IdValue.ClaroReadSe };
     public static readonly KnownApplication CLICK_N_TYPE = new() { Id = IdValue.ClickNType };
+    public static readonly KnownApplication COMFORT_OSK = new() { Id = IdValue.ComfortOsk };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
@@ -69,6 +71,8 @@ internal struct KnownApplication
                 return KnownApplication.CLAROREAD_SE;
             case "clickntype":
                 return KnownApplication.CLICK_N_TYPE;
+            case "comfortosk":
+                return KnownApplication.COMFORT_OSK;
             case "dragger":
                 return KnownApplication.DRAGGER;
             case "magic":
@@ -146,6 +150,14 @@ internal struct KnownApplication
                 {
                     new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/clickntype/CNTsetup.msi"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CNTsetup.msi", new IAtodChecksum.Sha256(new byte[] { 247, 39, 177, 189, 83, 5, 117, 0, 156, 194, 197, 39, 178, 75, 17, 158, 11, 182, 44, 216, 240, 103, 55, 228, 156, 122, 103, 243, 197, 141, 49, 102 })),
                     new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("downloadfolder"), "CNTsetup.msi", null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.ComfortOsk:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/comfortosk/ComfortOSKSetup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ComfortOSKSetup.exe", new IAtodChecksum.Sha256(new byte[] { 47, 50, 152, 31, 84, 136, 66, 70, 235, 149, 2, 171, 74, 145, 63, 162, 219, 199, 185, 249, 179, 244, 0, 127, 24, 199, 74, 255, 51, 29, 161, 34 })),
+                    //new IAtodOperation.Download(new Uri("https://www.comfortsoftware.com/download/ComfortOSKSetup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ComfortOSKSetup.exe", new IAtodChecksum.Sha256(new byte[] { 47, 50, 152, 31, 84, 136, 66, 70, 235, 149, 2, 171, 74, 145, 63, 162, 219, 199, 185, 249, 179, 244, 0, 127, 24, 199, 74, 255, 51, 29, 161, 34 })),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "ComfortOSKSetup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                 };
                 break;
             case IdValue.Dragger:
@@ -265,6 +277,13 @@ internal struct KnownApplication
                 result = new List<IAtodOperation>()
                 {
                     new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLICK_N_TYPE, null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.ComfortOsk:
+                // NOTE: ComfortOsk has a "QuietUninstallString" registry entry, but it uses "/SILENT" instead of "/VERYSILENT" so we supplement it with "/VERYSILENT"
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingRegistryUninstallString("{6EB17721-6249-417B-99B9-DAF3FD532955}_is1", new string[] { "/NORESTART /VERYSILENT" }, null, RequiresElevation: true),
                 };
                 break;
             case IdValue.Dragger:
