@@ -31,6 +31,7 @@ internal struct KnownApplication
         ClaroReadSe,
         ClickNType,
         ComfortOsk,
+        Communicator5,
         Dragger,
         Magic,
         Nvda,
@@ -48,6 +49,7 @@ internal struct KnownApplication
     public static readonly KnownApplication CLAROREAD_SE = new() { Id = IdValue.ClaroReadSe };
     public static readonly KnownApplication CLICK_N_TYPE = new() { Id = IdValue.ClickNType };
     public static readonly KnownApplication COMFORT_OSK = new() { Id = IdValue.ComfortOsk };
+    public static readonly KnownApplication COMMUNICATOR_5 = new() { Id = IdValue.Communicator5 };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
@@ -73,6 +75,8 @@ internal struct KnownApplication
                 return KnownApplication.CLICK_N_TYPE;
             case "comfortosk":
                 return KnownApplication.COMFORT_OSK;
+            case "communicator5":
+                return KnownApplication.COMMUNICATOR_5;
             case "dragger":
                 return KnownApplication.DRAGGER;
             case "magic":
@@ -158,6 +162,14 @@ internal struct KnownApplication
                     new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/comfortosk/ComfortOSKSetup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ComfortOSKSetup.exe", new IAtodChecksum.Sha256(new byte[] { 47, 50, 152, 31, 84, 136, 66, 70, 235, 149, 2, 171, 74, 145, 63, 162, 219, 199, 185, 249, 179, 244, 0, 127, 24, 199, 74, 255, 51, 29, 161, 34 })),
                     //new IAtodOperation.Download(new Uri("https://www.comfortsoftware.com/download/ComfortOSKSetup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ComfortOSKSetup.exe", new IAtodChecksum.Sha256(new byte[] { 47, 50, 152, 31, 84, 136, 66, 70, 235, 149, 2, 171, 74, 145, 63, 162, 219, 199, 185, 249, 179, 244, 0, 127, 24, 199, 74, 255, 51, 29, 161, 34 })),
                     new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "ComfortOSKSetup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                };
+                break;
+            case IdValue.Communicator5:
+                result = new List<IAtodOperation>()
+                {
+                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/communicator5/TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", new IAtodChecksum.Sha256(new byte[] { 166, 250, 23, 4, 104, 200, 73, 99, 181, 133, 233, 25, 48, 23, 179, 100, 68, 37, 145, 200, 35, 192, 159, 168, 164, 220, 248, 225, 14, 66, 57, 31 })),
+                    new IAtodOperation.Download(new Uri("https://download.mytobiidynavox.com/Communicator/software/5.6.1/TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", new IAtodChecksum.Sha256(new byte[] { 166, 250, 23, 4, 104, 200, 73, 99, 181, 133, 233, 25, 48, 23, 179, 100, 68, 37, 145, 200, 35, 192, 159, 168, 164, 220, 248, 225, 14, 66, 57, 31 })),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", "/SILENT", null, true),
                 };
                 break;
             case IdValue.Dragger:
@@ -284,6 +296,20 @@ internal struct KnownApplication
                 result = new List<IAtodOperation>()
                 {
                     new IAtodOperation.UninstallUsingRegistryUninstallString("{6EB17721-6249-417B-99B9-DAF3FD532955}_is1", new string[] { "/NORESTART /VERYSILENT" }, null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.Communicator5:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_COMMUNICATOR_5, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_PCS_FOR_COMMUNICATOR_5, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_US_ENGLISH_VOICES_FOR_TOBII_COMMUNICATOR, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_SONO_FLEX, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_SONO_KEY, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_SONO_LEXIS, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_SONO_PROMO_FOR_COMMUNICATOR, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_LITERAACY_US_EN, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_SYMBOLSTIX_2, null, RequiresElevation: true),
                 };
                 break;
             case IdValue.Dragger:
