@@ -27,6 +27,8 @@ internal struct KnownApplication
         AutoHotkey,
         BuildABoard,
         CameraMouse,
+        ClaroRead,
+        ClaroReadSe,
         Dragger,
         Magic,
         Nvda,
@@ -40,6 +42,8 @@ internal struct KnownApplication
     public static readonly KnownApplication AUTOHOTKEY = new() {  Id = IdValue.AutoHotkey };
     public static readonly KnownApplication BUILD_A_BOARD = new() { Id = IdValue.BuildABoard };
     public static readonly KnownApplication CAMERA_MOUSE = new() { Id = IdValue.CameraMouse };
+    public static readonly KnownApplication CLAROREAD = new() { Id = IdValue.ClaroRead };
+    public static readonly KnownApplication CLAROREAD_SE = new() { Id = IdValue.ClaroReadSe };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
@@ -57,6 +61,10 @@ internal struct KnownApplication
                 return KnownApplication.BUILD_A_BOARD;
             case "cameramouse":
                 return KnownApplication.CAMERA_MOUSE;
+            case "claroread":
+                return KnownApplication.CLAROREAD;
+            case "claroreadse":
+                return KnownApplication.CLAROREAD_SE;
             case "dragger":
                 return KnownApplication.DRAGGER;
             case "magic":
@@ -105,6 +113,27 @@ internal struct KnownApplication
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/cameramouse/CameraMouse2018Installer.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CameraMouse2018Installer.exe", new IAtodChecksum.Sha256(new byte[] { 46, 79, 235, 219, 64, 193, 9, 39, 54, 33, 199, 223, 31, 66, 226, 80, 196, 144, 214, 172, 6, 147, 65, 80, 239, 220, 234, 126, 200, 111, 68, 52 })),
                     new IAtodOperation.Download(new Uri("http://www.cameramouse.org/downloads/CameraMouse2018Installer.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CameraMouse2018Installer.exe", new IAtodChecksum.Sha256(new byte[] { 46, 79, 235, 219, 64, 193, 9, 39, 54, 33, 199, 223, 31, 66, 226, 80, 196, 144, 214, 172, 6, 147, 65, 80, 239, 220, 234, 126, 200, 111, 68, 52 })),
                     new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "CameraMouse2018Installer.exe", "/VERYSILENT", null, true),
+                };
+                break;
+            case IdValue.ClaroRead:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/claroread/ClaroRead-12.0.29-auth-bundle.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ClaroRead-12.0.29-auth-bundle.zip", new IAtodChecksum.Sha256(new byte[] { 71, 107, 184, 235, 96, 196, 0, 70, 56, 229, 227, 209, 126, 188, 46, 17, 211, 118, 45, 14, 31, 184, 124, 58, 145, 132, 207, 46, 211, 194, 176, 120 })),
+                    new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "ClaroRead-12.0.29-auth-bundle.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ClaroRead-int-12.0.29-auth.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Capture-int-8.2.5-auth.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ClaroIdeas-int-3.1.0-auth.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ClaroView-int-3.4.8-auth.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Scan2Text-int-7.4.19-auth.msi", null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.ClaroReadSe:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/claroreadse/ClaroReadSE-12.0.29-auth.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ClaroReadSE-12.0.29-auth.zip", new IAtodChecksum.Sha256(new byte[] { 10, 216, 206, 64, 233, 62, 147, 47, 173, 200, 128, 149, 102, 213, 0, 140, 116, 0, 210, 33, 111, 211, 74, 70, 140, 74, 135, 26, 106, 206, 3, 126 })),
+                    new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "ClaroReadSE-12.0.29-auth.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ClaroReadSE-int-12.0.29-auth.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ScanScreenPlus-int-2.2.4-net.msi", null, RequiresElevation: true),
                 };
                 break;
             case IdValue.Dragger:
@@ -201,6 +230,23 @@ internal struct KnownApplication
                 result = new List<IAtodOperation>()
                 {
                     new IAtodOperation.UninstallUsingRegistryUninstallString("{F5E6727D-0969-4C4A-A669-71F1A3913A03}}_is1", new string[] { "/VERYSILENT" }, null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.ClaroRead:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLARO_SOFTWARE_SCAN2TEXT, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLARO_SOFTWARE_CLAROVIEW_SCREEN_READER_SCREEN_MARKER, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLARO_SOFTWARE_CLAROIDEAS, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLARO_SOFTWARE_CAPTURE, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLARO_SOFTWARE_CLAROREAD, null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.ClaroReadSe:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLARO_SOFTWARE_SCAN_SCREEN_PLUS, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.CLARO_SOFTWARE_CLAROREAD_SE, null, RequiresElevation: true),
                 };
                 break;
             case IdValue.Dragger:
