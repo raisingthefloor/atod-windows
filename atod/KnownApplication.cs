@@ -24,23 +24,29 @@ internal struct KnownApplication
 {
     public enum IdValue
     {
+        Dragger,
         Magic,
         Nvda,
         PurpleP3,
         ReadAndWrite,
+        Softype,
     }
 
     public readonly KnownApplication.IdValue Id { get; init; }
 
+    public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
     public static readonly KnownApplication PURPLE_P3 = new() { Id = IdValue.PurpleP3 };
     public static readonly KnownApplication READ_AND_WRITE = new() { Id = IdValue.ReadAndWrite };
+    public static readonly KnownApplication SOFTYPE = new() { Id = IdValue.Softype };
 
     public static KnownApplication? TryFromProductName(string applicationName)
     {
         switch (applicationName.ToLowerInvariant())
         {
+            case "dragger":
+                return KnownApplication.DRAGGER;
             case "magic":
                 return KnownApplication.MAGIC;
             case "nvda":
@@ -49,6 +55,8 @@ internal struct KnownApplication
                 return KnownApplication.PURPLE_P3;
             case "readandwrite":
                 return KnownApplication.READ_AND_WRITE;
+            case "softype":
+                return KnownApplication.SOFTYPE;
             default:
                 return null;
         }
@@ -62,6 +70,15 @@ internal struct KnownApplication
 
         switch (this.Id)
         {
+            case IdValue.Dragger:
+                result = new List<IAtodOperation>()
+                {
+                    // Intel 32-bit (also works on 64-bit)
+                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/dragger/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256(new byte[] { 192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232 })),
+                    new IAtodOperation.Download(new Uri("https://orin.com/binaries/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256(new byte[] { 192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232 })),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", "/qn", STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                };
+                break;
             case IdValue.Magic:
                 result = new List<IAtodOperation>()
                 {
@@ -101,6 +118,15 @@ internal struct KnownApplication
                     new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi", null, RequiresElevation: true),
                 };
                 break;
+            case IdValue.Softype:
+                result = new List<IAtodOperation>()
+                {
+                    // Intel 32-bit (also works on 64-bit)
+                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/softype/SofTypeSetup5.0.1074.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", new IAtodChecksum.Sha256(new byte[] { 7, 194, 43, 36, 173, 85, 39, 1, 90, 164, 199, 126, 119, 42, 88, 220, 237, 100, 180, 138, 132, 56, 211, 126, 203, 95, 151, 150, 184, 245, 123, 31 })),
+                    new IAtodOperation.Download(new Uri("https://orin.com/binaries/SofTypeSetup5.0.1074.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", new IAtodChecksum.Sha256(new byte[] { 7, 194, 43, 36, 173, 85, 39, 1, 90, 164, 199, 126, 119, 42, 88, 220, 237, 100, 180, 138, 132, 56, 211, 126, 203, 95, 151, 150, 184, 245, 123, 31 })),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", "/qn", STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                };
+                break;
             default:
                 throw new Exception("invalid code path");
         }
@@ -116,6 +142,12 @@ internal struct KnownApplication
 
         switch (this.Id)
         {
+            case IdValue.Dragger:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DRAGGER, null, RequiresElevation: true),
+                };
+                break;
             case IdValue.Magic:
                 result = new List<IAtodOperation>()
                 {
@@ -148,26 +180,16 @@ internal struct KnownApplication
                     new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.READ_AND_WRITE, null, RequiresElevation: true),
                 };
                 break;
+            case IdValue.Softype:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.SOFTYPE, null, RequiresElevation: true),
+                };
+                break;
             default:
                 throw new Exception("invalid code path");
         }
 
         return result;
     }
-
-    //private Guid? GetWindowsInstallerProductCode()
-    //{
-    //    switch (this.Id)
-    //    {
-    //        case IdValue.Magic:
-    //            // NOTE: MAGic is a multi-component installer
-    //            return null;
-    //        case IdValue.Nvda:
-    //            return null;
-    //        case IdValue.ReadAndWrite:
-    //            return KnownApplicationProductCode.READ_AND_WRITE;
-    //        default:
-    //            throw new Exception("invalid code path");
-    //    }
-    //}
 }

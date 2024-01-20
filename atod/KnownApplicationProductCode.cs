@@ -22,8 +22,10 @@ namespace Atod;
 internal struct KnownApplicationProductCode
 {
     // main products
-    public static readonly Guid PURPLE_P3 = Guid.Parse("{8B1DFBBC-E163-4099-A23B-0B52A0ADE4BC}"); // "{8B1DFBBC-E163-4099-A23B-0B52A0ADE4BC}
+    public static readonly Guid DRAGGER = Guid.Parse("{EC8EF634-CE16-4134-B719-CAEA072E5656}"); // {EC8EF634-CE16-4134-B719-CAEA072E5656}
+    public static readonly Guid PURPLE_P3 = Guid.Parse("{8B1DFBBC-E163-4099-A23B-0B52A0ADE4BC}"); // {8B1DFBBC-E163-4099-A23B-0B52A0ADE4BC}
     public static readonly Guid READ_AND_WRITE = new Guid(0x355AB00F, 0x48E8, 0x474E, 0xAC, 0xC4, 0xD9, 0x17, 0xBA, 0xFA, 0x4D, 0x58); // {355AB00F-48E8-474E-ACC4-D917BAFA4D58}
+    public static readonly Guid SOFTYPE = Guid.Parse("{2DD1676A-A465-4A4C-911C-F37E76675E4C}"); // {2DD1676A-A465-4A4C-911C-F37E76675E4C}
 
     // components
     public static readonly Guid FREEDOM_SCIENTIFIC_MAGIC_EXTERNAL_VIDEO_INTERFACE = Guid.Parse("{CBABC63D-8FF4-11E2-8181-B8AC6F9E17F4}"); // {CBABC63D-8FF4-11E2-8181-B8AC6F9E17F4}
