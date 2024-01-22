@@ -505,101 +505,124 @@ public class Program
                         progressBar.TrailingText = "Downloaded";
                     }
                     break;
-                case IAtodOperation.InstallExe { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, CommandLineArgs: var operationCommandLineArgsAsNullable, RebootRequiredExitCode: var rebootRequiredExitCodeAsNullable, RequiresElevation: bool _ }:
+                case IAtodOperation.InstallExe { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, CommandLineArgs: var operationCommandLineArgsAsNullable, Conditions: List<IAtodOperationCondition> conditions, RebootRequiredExitCode: var rebootRequiredExitCodeAsNullable, RequiresElevation: bool _ }:
                     {
-                        string exeFileFullPath;
-                        switch (operationSourcePath.Value)
-                        {
-                            case AtodPath.Values.ExistingPathKey:
-                                string? existingPath;
-                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(operationSourcePath.Key!.ToLowerInvariant(), out existingPath);
-                                if (existingPathExists == false)
-                                {
-                                    Console.WriteLine("Source path for EXE not found; this probably indicates a download failure (or internal failure).");
-                                    Console.WriteLine();
-                                    //
-                                    return (int)ExitCode.FileNotFound;
-                                }
-                                exeFileFullPath = Path.Combine(existingPath!, operationFilename);
-                                break;
-                            case AtodPath.Values.None:
-                                exeFileFullPath = operationFilename;
-                                break;
-                            default:
-                                throw new Exception("unsupported choice");
-//                                throw new Exception("invalid code path");
-                        }
-                        //
-                        // set up the command line arguments
-                        string? exeArguments = operationCommandLineArgsAsNullable;
-
-                        progressBar.TrailingText = "Installing";
-
-                        System.Diagnostics.ProcessStartInfo startInfo;
-                        if (exeArguments is not null)
-                        {
-                            startInfo = new System.Diagnostics.ProcessStartInfo(exeFileFullPath, exeArguments!);
-                        }
-                        else
-                        {
-                            startInfo = new System.Diagnostics.ProcessStartInfo(exeFileFullPath);
-                        }
-                        startInfo.UseShellExecute = true;
-
-                        System.Diagnostics.Process? exeProcess;
-                        System.ComponentModel.Win32Exception? win32Exception = null;
-                        try
-                        {
-                            exeProcess = System.Diagnostics.Process.Start(startInfo);
-                        }
-                        catch (System.ComponentModel.Win32Exception ex)
-                        {
-                            exeProcess = null;
-                            win32Exception = ex;
-                        }
-                        //
-                        if (exeProcess is null)
+                        // test installation conditions
+                        var evaluateShouldSkipOperationResult = Program.EvaluateShouldSkipOperation(conditions);
+                        if (evaluateShouldSkipOperationResult.IsError)
                         {
                             progressBar.Hide();
 
                             Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Installation Failed");
                             Console.WriteLine();
                             Console.WriteLine("Application could not be installed.");
-                            if (win32Exception is not null)
+                            Console.WriteLine("Could not evaluate conditions for operation.");
+                            return (int)ExitCode.ExeInstallerMiscError;
+                        }
+                        var shouldSkipOperation = evaluateShouldSkipOperationResult.Value!;
+
+                        if (shouldSkipOperation == false)
+                        {
+                            string exeFileFullPath;
+                            switch (operationSourcePath.Value)
                             {
-                                Console.WriteLine("Win32 error code: " + win32Exception!.ErrorCode.ToString());
+                                case AtodPath.Values.ExistingPathKey:
+                                    string? existingPath;
+                                    var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(operationSourcePath.Key!.ToLowerInvariant(), out existingPath);
+                                    if (existingPathExists == false)
+                                    {
+                                        Console.WriteLine("Source path for EXE not found; this probably indicates a download failure (or internal failure).");
+                                        Console.WriteLine();
+                                        //
+                                        return (int)ExitCode.FileNotFound;
+                                    }
+                                    exeFileFullPath = Path.Combine(existingPath!, operationFilename);
+                                    break;
+                                case AtodPath.Values.None:
+                                    exeFileFullPath = operationFilename;
+                                    break;
+                                default:
+                                    throw new Exception("unsupported choice");
+                                    //                                throw new Exception("invalid code path");
                             }
-                            return (int)ExitCode.ExeInstallerMiscError;
+                            //
+                            // set up the command line arguments
+                            string? exeArguments = operationCommandLineArgsAsNullable;
+
+                            progressBar.TrailingText = "Installing";
+
+                            System.Diagnostics.ProcessStartInfo startInfo;
+                            if (exeArguments is not null)
+                            {
+                                startInfo = new System.Diagnostics.ProcessStartInfo(exeFileFullPath, exeArguments!);
+                            }
+                            else
+                            {
+                                startInfo = new System.Diagnostics.ProcessStartInfo(exeFileFullPath);
+                            }
+                            startInfo.UseShellExecute = true;
+
+                            System.Diagnostics.Process? exeProcess;
+                            System.ComponentModel.Win32Exception? win32Exception = null;
+                            try
+                            {
+                                exeProcess = System.Diagnostics.Process.Start(startInfo);
+                            }
+                            catch (System.ComponentModel.Win32Exception ex)
+                            {
+                                exeProcess = null;
+                                win32Exception = ex;
+                            }
+                            //
+                            if (exeProcess is null)
+                            {
+                                progressBar.Hide();
+
+                                Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Installation Failed");
+                                Console.WriteLine();
+                                Console.WriteLine("Application could not be installed.");
+                                if (win32Exception is not null)
+                                {
+                                    Console.WriteLine("Win32 error code: " + win32Exception!.ErrorCode.ToString());
+                                }
+                                return (int)ExitCode.ExeInstallerMiscError;
+                            }
+
+                            await exeProcess!.WaitForExitAsync();
+
+                            var rebootRequiredFromOperation = false;
+
+                            var exeExitCode = exeProcess!.ExitCode;
+                            if (rebootRequiredExitCodeAsNullable is not null && exeExitCode == rebootRequiredExitCodeAsNullable!.Value)
+                            {
+                                rebootRequiredFromOperation = true;
+                                rebootRequiredAfterSequence = true;
+                            }
+                            else if (exeExitCode != 0)
+                            {
+                                progressBar.Hide();
+
+                                Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Installation Failed");
+                                Console.WriteLine();
+                                Console.WriteLine("Application could not be installed.");
+                                Console.WriteLine("EXE installer exit code: " + exeExitCode.ToString());
+                                Debug.Assert(false, "EXE exited with non-zero status code; make sure this is not a status code indicating a reboot requirement, etc.");
+                                return (int)ExitCode.ExeInstallerMiscError;
+                            }
+
+                            progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
+                            progressBar.TrailingText = rebootRequiredFromOperation switch
+                            {
+                                false => "Installed",
+                                true => "Reboot required to complete install",
+                            };
                         }
-
-                        await exeProcess!.WaitForExitAsync();
-
-                        var rebootRequiredFromOperation = false;
-
-                        var exeExitCode = exeProcess!.ExitCode;
-                        if (rebootRequiredExitCodeAsNullable is not null && exeExitCode == rebootRequiredExitCodeAsNullable!.Value)
+                        else // if (shouldSkipOperation == true)
                         {
-                            rebootRequiredFromOperation = true;
-                            rebootRequiredAfterSequence = true;
+                            // operation skipped
+                            //progressBar.TrailingText = "Skipped operation";
+                            break;
                         }
-                        else if (exeExitCode != 0)
-                        {
-                            progressBar.Hide();
-
-                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Installation Failed");
-                            Console.WriteLine();
-                            Console.WriteLine("Application could not be installed.");
-                            Console.WriteLine("EXE installer exit code: " + exeExitCode.ToString());
-                            Debug.Assert(false, "EXE exited with non-zero status code; make sure this is not a status code indicating a reboot requirement, etc.");
-                            return (int)ExitCode.ExeInstallerMiscError;
-                        }
-
-                        progressBar.Value = ((double)iOperation + 1) / (double)atodOperationCount;
-                        progressBar.TrailingText = rebootRequiredFromOperation switch
-                        {
-                            false => "Installed",
-                            true => "Reboot required to complete install",
-                        };
                     }
                     break;
                 case IAtodOperation.InstallMsi { SourcePath: AtodPath operationSourcePath, Filename: string operationFilename, PropertySettings: var propertySettingsAsNullable, RequiresElevation: bool _}:
@@ -1393,5 +1416,77 @@ public class Program
         }
 
         return result;
+    }
+
+    private static MorphicResult<bool, MorphicUnit> EvaluateShouldSkipOperation(List<IAtodOperationCondition> conditions)
+    {
+        foreach (var condition in conditions)
+        {
+            switch (condition) {
+                case IAtodOperationCondition.SkipOperationIfRegistryValueIsNonZeroVersion { RootKey: Microsoft.Win32.RegistryKey rootKey, SubKeyName: string subKeyName, ValueName: string valueName }:
+                    {
+                        Microsoft.Win32.RegistryKey? registrySubKey;
+                        try
+                        {
+                            registrySubKey = rootKey.OpenSubKey(subKeyName, false);
+                        }
+                        catch
+                        {
+                            return MorphicResult.ErrorResult();
+                        }
+                        if (registrySubKey is null)
+                        {
+                            // if the key does not exist, then we should not skip the operation
+                            continue;
+                        }
+
+                        object? valueAsNullableObject;
+                        try
+                        {
+                            valueAsNullableObject = registrySubKey!.GetValue(valueName);
+                        }
+                        catch
+                        {
+                            return MorphicResult.ErrorResult();
+                        }
+                        if (valueAsNullableObject is null)
+                        {
+                            // if the value does not exist, then we should not skip the operation
+                            continue;
+                        }
+
+                        if (registrySubKey!.GetValueKind(valueName) != Microsoft.Win32.RegistryValueKind.String)
+                        {
+                            return MorphicResult.ErrorResult();
+                        }
+
+                        var valueAsString = (string?)valueAsNullableObject!;
+                        if (String.IsNullOrEmpty(valueAsString) == true || valueAsString == "0.0.0.0")
+                        {
+                            // if the value is an empty string or "0.0.0.0", then we should not skip the operation
+                            continue;
+                        }
+
+                        // if we cannot parse the version, return an error
+                        // NOTE: technically we do not need to parse the version to return "skip", as just the presence of a non-null non-empty non-zero version string is in theory a non-zero version
+                        // see: https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution#installing-the-runtime-as-per-machine-or-per-user
+                        var parseSuccess = Version.TryParse(valueAsString, out var valueAsVersion);
+                        if (parseSuccess == false || valueAsVersion is null)
+                        {
+                            Debug.Assert(valueAsVersion is not null, "'valueAsVersion' should never be null here, as we already checked for a null value and also for an empty string");
+                            return MorphicResult.ErrorResult();
+                        }
+
+                        // if we reach here, the version is non-zero; skip this AToD operation
+                        return MorphicResult.OkResult(true);
+                    }
+                default:
+                    // this function doesn't process not-skip conditions
+                    break;
+            }
+        }
+
+        // if no operations indicated that we should skip the operation, return false
+        return MorphicResult.OkResult(false);
     }
 }

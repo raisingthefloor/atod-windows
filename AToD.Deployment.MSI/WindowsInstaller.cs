@@ -403,9 +403,9 @@ public class WindowsInstaller
             }
         }
     }
-    
+
     //
-    
+
     internal int InstallUiRecordHandler(IntPtr pvContext, uint iMessageType, uint hRecord)
     {
         var installationMessageType = PInvokeUtils.InstallUiHandlerMessageType.FromMessageType(iMessageType);

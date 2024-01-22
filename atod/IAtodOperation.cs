@@ -24,7 +24,7 @@ public interface IAtodOperation
 {
     public record CalculateChecksum(AtodPath SourcePath, string Filename, AtodChecksumAlgorithm ChecksumAlgorithm) : IAtodOperation;
     public record Download(Uri Uri, AtodPath DestinationPath, string Filename, IAtodChecksum? Checksum) : IAtodOperation;
-    public record InstallExe(AtodPath SourcePath, string Filename, string? CommandLineArgs, int? RebootRequiredExitCode, bool RequiresElevation) : IAtodOperation;
+    public record InstallExe(AtodPath SourcePath, string Filename, string? CommandLineArgs, List<IAtodOperationCondition> Conditions, int? RebootRequiredExitCode, bool RequiresElevation) : IAtodOperation;
     public record InstallMsi(AtodPath SourcePath, string Filename, Dictionary<string, string>? PropertySettings, bool RequiresElevation) : IAtodOperation;
     public record UninstallUsingRegistryUninstallString(string UninstallSubKeyName, string[]? OptionalSupplementalArgs, int? RebootRequiredExitCode, bool RequiresElevation) : IAtodOperation;
     public record UninstallUsingWindowsInstaller(Guid WindowsInstallerProductCode, Dictionary<string, string>? PropertySettings, bool RequiresElevation) : IAtodOperation;

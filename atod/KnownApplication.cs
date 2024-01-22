@@ -32,6 +32,8 @@ internal struct KnownApplication
         ClickNType,
         ComfortOsk,
         Communicator5,
+        CoWriter,
+        DolphinScreenReader,
         Dragger,
         Magic,
         Nvda,
@@ -50,6 +52,8 @@ internal struct KnownApplication
     public static readonly KnownApplication CLICK_N_TYPE = new() { Id = IdValue.ClickNType };
     public static readonly KnownApplication COMFORT_OSK = new() { Id = IdValue.ComfortOsk };
     public static readonly KnownApplication COMMUNICATOR_5 = new() { Id = IdValue.Communicator5 };
+    public static readonly KnownApplication COWRITER = new() { Id = IdValue.CoWriter };
+    public static readonly KnownApplication DOLPHIN_SCREEN_READER = new() { Id = IdValue.DolphinScreenReader };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
@@ -77,6 +81,10 @@ internal struct KnownApplication
                 return KnownApplication.COMFORT_OSK;
             case "communicator5":
                 return KnownApplication.COMMUNICATOR_5;
+            case "cowriter":
+                return KnownApplication.COWRITER;
+            case "dolphinscreenreader":
+                return KnownApplication.DOLPHIN_SCREEN_READER;
             case "dragger":
                 return KnownApplication.DRAGGER;
             case "magic":
@@ -108,7 +116,7 @@ internal struct KnownApplication
                     new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/autohotkey/AutoHotkey_2.0.11_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", new IAtodChecksum.Sha256(new byte[] { 81, 10, 131, 59, 221, 15, 137, 108, 195, 152, 234, 174, 79, 244, 117, 245, 183, 207, 227, 118, 73, 239, 191, 100, 123, 80, 210, 30, 68, 35, 148, 185 })),
                     // NOTE: we had problems with the AutoHotkey CDN returning HTTP 403 in testing; for now, we're using the AToD CDN instead
                     //new IAtodOperation.Download(new Uri("https://www.autohotkey.com/download/2.0/AutoHotkey_2.0.11_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", new IAtodChecksum.Sha256(new byte[] { 81, 10, 131, 59, 221, 15, 137, 108, 195, 152, 234, 174, 79, 244, 117, 245, 183, 207, 227, 118, 73, 239, 191, 100, 123, 80, 210, 30, 68, 35, 148, 185 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", "/silent", null, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", "/silent", [], null, true),
                 };
                 break;
             case IdValue.BuildABoard:
@@ -116,7 +124,7 @@ internal struct KnownApplication
                 {
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/buildaboard/bab220r7_win_7-11.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "bab220r7_win_7-11.exe", new IAtodChecksum.Sha256(new byte[] { 5, 119, 199, 0, 179, 224, 50, 132, 212, 73, 223, 118, 101, 145, 65, 143, 217, 30, 217, 149, 1, 160, 175, 154, 163, 91, 40, 217, 177, 212, 230, 61 })),
                     new IAtodOperation.Download(new Uri("https://www.imgpresents.com/downloads/secure/bab220r7_win_7-11.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "bab220r7_win_7-11.exe", new IAtodChecksum.Sha256(new byte[] { 5, 119, 199, 0, 179, 224, 50, 132, 212, 73, 223, 118, 101, 145, 65, 143, 217, 30, 217, 149, 1, 160, 175, 154, 163, 91, 40, 217, 177, 212, 230, 61 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "bab220r7_win_7-11.exe", "/Q", null, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "bab220r7_win_7-11.exe", "/Q", [], null, true),
                 };
                 break;
             case IdValue.CameraMouse:
@@ -124,7 +132,7 @@ internal struct KnownApplication
                 {
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/cameramouse/CameraMouse2018Installer.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CameraMouse2018Installer.exe", new IAtodChecksum.Sha256(new byte[] { 46, 79, 235, 219, 64, 193, 9, 39, 54, 33, 199, 223, 31, 66, 226, 80, 196, 144, 214, 172, 6, 147, 65, 80, 239, 220, 234, 126, 200, 111, 68, 52 })),
                     new IAtodOperation.Download(new Uri("http://www.cameramouse.org/downloads/CameraMouse2018Installer.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CameraMouse2018Installer.exe", new IAtodChecksum.Sha256(new byte[] { 46, 79, 235, 219, 64, 193, 9, 39, 54, 33, 199, 223, 31, 66, 226, 80, 196, 144, 214, 172, 6, 147, 65, 80, 239, 220, 234, 126, 200, 111, 68, 52 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "CameraMouse2018Installer.exe", "/VERYSILENT", null, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "CameraMouse2018Installer.exe", "/VERYSILENT", [], null, true),
                 };
                 break;
             case IdValue.ClaroRead:
@@ -161,7 +169,7 @@ internal struct KnownApplication
                 {
                     new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/comfortosk/ComfortOSKSetup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ComfortOSKSetup.exe", new IAtodChecksum.Sha256(new byte[] { 47, 50, 152, 31, 84, 136, 66, 70, 235, 149, 2, 171, 74, 145, 63, 162, 219, 199, 185, 249, 179, 244, 0, 127, 24, 199, 74, 255, 51, 29, 161, 34 })),
                     //new IAtodOperation.Download(new Uri("https://www.comfortsoftware.com/download/ComfortOSKSetup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ComfortOSKSetup.exe", new IAtodChecksum.Sha256(new byte[] { 47, 50, 152, 31, 84, 136, 66, 70, 235, 149, 2, 171, 74, 145, 63, 162, 219, 199, 185, 249, 179, 244, 0, 127, 24, 199, 74, 255, 51, 29, 161, 34 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "ComfortOSKSetup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "ComfortOSKSetup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                 };
                 break;
             case IdValue.Communicator5:
@@ -169,7 +177,50 @@ internal struct KnownApplication
                 {
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/communicator5/TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", new IAtodChecksum.Sha256(new byte[] { 166, 250, 23, 4, 104, 200, 73, 99, 181, 133, 233, 25, 48, 23, 179, 100, 68, 37, 145, 200, 35, 192, 159, 168, 164, 220, 248, 225, 14, 66, 57, 31 })),
                     new IAtodOperation.Download(new Uri("https://download.mytobiidynavox.com/Communicator/software/5.6.1/TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", new IAtodChecksum.Sha256(new byte[] { 166, 250, 23, 4, 104, 200, 73, 99, 181, 133, 233, 25, 48, 23, 179, 100, 68, 37, 145, 200, 35, 192, 159, 168, 164, 220, 248, 225, 14, 66, 57, 31 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", "/SILENT", null, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", "/SILENT", [], null, true),
+                };
+                break;
+            case IdValue.CoWriter:
+                result = new List<IAtodOperation>()
+                {
+                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/cowriter/cowriter-universal-desktop.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "cowriter-universal-desktop.zip", new IAtodChecksum.Sha256(new byte[] { 161, 17, 99, 194, 63, 214, 199, 187, 55, 65, 121, 192, 191, 184, 150, 177, 4, 92, 191, 174, 53, 80, 60, 209, 30, 46, 11, 137, 44, 250, 65, 160 })),
+                    new IAtodOperation.Download(new Uri("http://donjohnston.com/wp-content/downloads/products/cowriter-universal-desktop.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "cowriter-universal-desktop.zip", new IAtodChecksum.Sha256(new byte[] { 161, 17, 99, 194, 63, 214, 199, 187, 55, 65, 121, 192, 191, 184, 150, 177, 4, 92, 191, 174, 53, 80, 60, 209, 30, 46, 11, 137, 44, 250, 65, 160 })),
+                    new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "cowriter-universal-desktop.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "CoWriter Universal Desktop.msi", null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.DolphinScreenReader:
+                result = new List<IAtodOperation>()
+                {
+                    //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/dolphinscreenreader/ScreenReader_22.04_English_(United_States)_NETWORK.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ScreenReader_22.04_English_(United_States)_NETWORK.zip", new IAtodChecksum.Sha256(new byte[] { 10, 9, 68, 124, 151, 69, 51, 35, 52, 38, 250, 19, 105, 129, 188, 249, 101, 101, 1, 43, 207, 49, 10, 109, 1, 0, 123, 94, 216, 152, 46, 232 })),
+                    new IAtodOperation.Download(new Uri("https://yourdolphin.com/downloads/product?pvid=552&lid=2&network=true"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ScreenReader_22.04_English_(United_States)_NETWORK.zip", new IAtodChecksum.Sha256(new byte[] { 10, 9, 68, 124, 151, 69, 51, 35, 52, 38, 250, 19, 105, 129, 188, 249, 101, 101, 1, 43, 207, 49, 10, 109, 1, 0, 123, 94, 216, 152, 46, 232 })),
+                    new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "ScreenReader_22.04_English_(United_States)_NETWORK.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                    //
+                    // NOTE: for MicrosoftEdgeWebView2RuntimeInstaller deployment details, see: https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution
+                    //new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "3rdParty\\MicrosoftEdgeWebView2RuntimeInstallerX86.exe", "/silent /install",
+                    //    [
+                    //        new IAtodOperationCondition.SkipOperationIfRegistryValueIsNonZeroVersion(RootKey: Microsoft.Win32.Registry.LocalMachine, SubKeyName: "SOFTWARE\\Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}", "pv"),
+                    //        new IAtodOperationCondition.SkipOperationIfRegistryValueIsNonZeroVersion(RootKey: Microsoft.Win32.Registry.CurrentUser, SubKeyName: "Software\\Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}", "pv"),
+                    //    ],
+                    //    null, true), // Intel 32-bit
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "3rdParty\\MicrosoftEdgeWebView2RuntimeInstallerX64.exe", "/silent /install",
+                        [
+                            new IAtodOperationCondition.SkipOperationIfRegistryValueIsNonZeroVersion(RootKey: Microsoft.Win32.Registry.LocalMachine, SubKeyName: "SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}", "pv"),
+                            new IAtodOperationCondition.SkipOperationIfRegistryValueIsNonZeroVersion(RootKey: Microsoft.Win32.Registry.CurrentUser, SubKeyName: "Software\\Microsoft\\EdgeUpdate\\Clients\\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}", "pv"),
+                        ],
+                        null, true),   // Intel 64-bit
+                    //
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "3rdParty\\vc_redist.x86.exe", "/install /quiet /norestart", [], null, true),   // Intel 64-bit
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Sam\\Sam.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Sam\\Sam64Addon.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Voices\\VocExprCommonFiles.msi", null, RequiresElevation: true),
+                    //new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Voices/English_US_Allison.msi", null, RequiresElevation: true),
+                    //new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Voices/English_US_Ava.msi", null, RequiresElevation: true),
+                    //new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Voices/English_US_Samantha.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Voices\\English_US_Tom.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Voices\\Orpheus.msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "SuperNova\\SnovaRead.msi", new() { { "SETUPLANGLIST", "\"00044\"" } }, RequiresElevation: true),
+                    // NOTE: the network installation instructions say to ensure that the system is restarted following installation
                 };
                 break;
             case IdValue.Dragger:
@@ -178,7 +229,7 @@ internal struct KnownApplication
                     // Intel 32-bit (also works on 64-bit)
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/dragger/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256(new byte[] { 192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232 })),
                     new IAtodOperation.Download(new Uri("https://orin.com/binaries/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256(new byte[] { 192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", "/qn", null, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", "/qn", [], null, true),
                 };
                 break;
             case IdValue.Magic:
@@ -187,7 +238,7 @@ internal struct KnownApplication
                     // Intel 64-bit
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/magic/M15.0.2014.400-enu-x64.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", new IAtodChecksum.Sha256(new byte[] { 117, 43, 40, 31, 213, 216, 116, 36, 163, 80, 21, 225, 236, 198, 3, 98, 216, 80, 190, 74, 152, 147, 124, 179, 180, 103, 218, 218, 33, 248, 175, 208 })),
                     new IAtodOperation.Download(new Uri("https://magic15.vfo.digital/1502013NT2244W/M15.0.2014.400-enu-x64.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", new IAtodChecksum.Sha256(new byte[] { 117, 43, 40, 31, 213, 216, 116, 36, 163, 80, 21, 225, 236, 198, 3, 98, 216, 80, 190, 74, 152, 147, 124, 179, 180, 103, 218, 218, 33, 248, 175, 208 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", "/type silent", STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", "/type silent", [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                     //
                     // Intel 32-bit
                     ////new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/magic/M15.0.2014.400-enu-x86.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x86.exe", new IAtodChecksum.Sha256(new byte[] { 191, 242, 8, 62, 97, 92, 119, 166, 122, 208, 203, 88, 108, 200, 56, 65, 5, 197, 43, 69, 56, 82, 107, 0, 78, 111, 94, 99, 189, 235, 169, 128 })),
@@ -199,7 +250,7 @@ internal struct KnownApplication
                 result = new List<IAtodOperation>()
                 {
                     new IAtodOperation.Download(new Uri("https://www.nvaccess.org/download/nvda/releases/2023.3.1/nvda_2023.3.1.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "nvda_2023.3.1.exe", new IAtodChecksum.Sha256(new byte[] { 181, 55, 16, 36, 104, 67, 106, 185, 62, 15, 230, 60, 247, 140, 138, 220, 84, 66, 235, 190, 208, 88, 146, 119, 212, 92, 60, 185, 196, 239, 140, 114 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--minimal --install-silent", null, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--minimal --install-silent", [], null, true),
                 };
                 break;
             case IdValue.PurpleP3:
@@ -226,7 +277,7 @@ internal struct KnownApplication
                     // Intel 32-bit (also works on 64-bit)
                     //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/softype/SofTypeSetup5.0.1074.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", new IAtodChecksum.Sha256(new byte[] { 7, 194, 43, 36, 173, 85, 39, 1, 90, 164, 199, 126, 119, 42, 88, 220, 237, 100, 180, 138, 132, 56, 211, 126, 203, 95, 151, 150, 184, 245, 123, 31 })),
                     new IAtodOperation.Download(new Uri("https://orin.com/binaries/SofTypeSetup5.0.1074.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", new IAtodChecksum.Sha256(new byte[] { 7, 194, 43, 36, 173, 85, 39, 1, 90, 164, 199, 126, 119, 42, 88, 220, 237, 100, 180, 138, 132, 56, 211, 126, 203, 95, 151, 150, 184, 245, 123, 31 })),
-                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", "/qn", null, true),
+                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", "/qn", [], null, true),
                 };
                 break;
             default:
@@ -310,6 +361,23 @@ internal struct KnownApplication
                     new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_SONO_PROMO_FOR_COMMUNICATOR, null, RequiresElevation: true),
                     new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_LITERAACY_US_EN, null, RequiresElevation: true),
                     new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TOBII_DYNAVOX_SYMBOLSTIX_2, null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.CoWriter:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DON_JOHNSTON_CO_WRITER, null, RequiresElevation: true),
+                };
+                break;
+            case IdValue.DolphinScreenReader:
+                result = new List<IAtodOperation>()
+                {
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DOLPHIN_SCREEN_READER, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DOLPHIN_ORPHEUS, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DOLPHIN_SAM_VOCALIZER_EXPRESSIVE_ENGLISH_TOM, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DOLPHIN_SAM_VOCALIZER_EXPRESSIVE_VOCALIZER_EXPRESSIVE_COMMON_FILES, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DOLPHIN_SAM_64_BIT_ADDON, null, RequiresElevation: true),
+                    new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DOLPHIN_SAM, null, RequiresElevation: true),
                 };
                 break;
             case IdValue.Dragger:
