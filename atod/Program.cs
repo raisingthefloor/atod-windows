@@ -394,6 +394,58 @@ public class Program
 #else
                     throw new Exception("invalid code path");
 #endif
+                case IAtodOperation.CreateRegistryKey { RootKey: Microsoft.Win32.RegistryKey rootKey, SubKeyName: string subKeyName, RequiresElevation: _ }:
+                    {
+                        // check to see if the subkey already exists
+                        try
+                        {
+                            var existingSubKey = rootKey.OpenSubKey(subKeyName, false);
+                            if (existingSubKey is not null)
+                            {
+                                // non-null means that the subkey already exists, there is nothing to create
+                                break;
+                            }
+                            // NOTE: a null existingSubKey is a success condition and indicates that the registry key does not exist
+                        }
+                        catch (Exception ex)
+                        {
+                            // NOTE: if the registry key did not exist, we would have gotten a null result; an exception indicates an access or other failure (i.e. not that the subkey does not exist)
+                            Debug.Assert(false, "Could not try to open registry key (to see if it exists); exception: " + ex.Message); // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.registrykey.createsubkey?view=net-8.0
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Registry Key Creation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Registry access failed.");
+                            return (int)ExitCode.RegistryAccessFailed;
+                        }
+
+                        Microsoft.Win32.RegistryKey? newSubKey;
+                        try
+                        {
+                            newSubKey = rootKey.CreateSubKey(subKeyName, true);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.Assert(false, "Could not create registry key; exception: " + ex.Message); // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.registrykey.createsubkey?view=net-8.0
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Registry Key Creation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Registry key could not be created.");
+                            return (int)ExitCode.RegistryAccessFailed;
+                        }
+                        if (newSubKey is null)
+                        {
+                            Debug.Assert(false, "Could not create registry key"); // see: https://learn.microsoft.com/en-us/dotnet/api/microsoft.win32.registrykey.createsubkey?view=net-8.0
+                            progressBar.Hide();
+
+                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Registry Key Creation Failed");
+                            Console.WriteLine();
+                            Console.WriteLine("Registry key could not be created.");
+                            return (int)ExitCode.RegistryAccessFailed;
+                        }
+                    }
+                    break;
                 case IAtodOperation.Download { Uri: Uri operationUri, DestinationPath: AtodPath operationDestinationPath, Filename: string operationFilename, Checksum: var operationChecksumAsNullable }:
                     {
                         string? destinationFullPath;

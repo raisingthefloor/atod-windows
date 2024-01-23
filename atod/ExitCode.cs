@@ -33,6 +33,7 @@ internal enum ExitCode : int
     UninstallerNotRegistered= 0x0009,
     ChecksumOperationFailed = 0x0010,
     ChecksumMismatch        = 0x0011,
+    RegistryAccessFailed    = 0x0012,
     // msi installation-related failures
     WindowsInstallerMiscError = 0x0100,
     // exe installation-related failures

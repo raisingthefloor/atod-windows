@@ -23,6 +23,7 @@ namespace Atod;
 public interface IAtodOperation
 {
     public record CalculateChecksum(AtodPath SourcePath, string Filename, AtodChecksumAlgorithm ChecksumAlgorithm) : IAtodOperation;
+    public record CreateRegistryKey(Microsoft.Win32.RegistryKey RootKey, string SubKeyName, bool RequiresElevation) : IAtodOperation;
     public record Download(Uri Uri, AtodPath DestinationPath, string Filename, IAtodChecksum? Checksum) : IAtodOperation;
     public record InstallExe(AtodPath SourcePath, string Filename, string? CommandLineArgs, List<IAtodOperationCondition> Conditions, int? RebootRequiredExitCode, bool RequiresElevation) : IAtodOperation;
     public record InstallMsi(AtodPath SourcePath, string Filename, Dictionary<string, string>? PropertySettings, bool RequiresElevation) : IAtodOperation;
@@ -36,6 +37,7 @@ public interface IAtodOperation
         var result = this switch
         {
             IAtodOperation.CalculateChecksum => false,
+            IAtodOperation.CreateRegistryKey { RequiresElevation: var requiresElevation } => requiresElevation,
             IAtodOperation.Download => false,
             IAtodOperation.InstallExe { RequiresElevation: var requiresElevation } => requiresElevation,
             IAtodOperation.InstallMsi { RequiresElevation: var requiresElevation } => requiresElevation,
