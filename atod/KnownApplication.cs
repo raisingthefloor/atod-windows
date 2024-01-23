@@ -93,8 +93,6 @@ internal struct KnownApplication
                 return KnownApplication.DOLPHIN_SCREEN_READER;
             case "dragger":
                 return KnownApplication.DRAGGER;
-            case "fusion":
-                return KnownApplication.FUSION;
             case "magic":
                 return KnownApplication.MAGIC;
             case "nvda":
