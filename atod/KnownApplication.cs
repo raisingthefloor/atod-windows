@@ -15,6 +15,9 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+//#define USE_OFFLINE_BASE_PATH
+//#define USE_ATOD_CDN
+
 using System;
 using System.Collections.Generic;
 
@@ -22,6 +25,13 @@ namespace Atod;
 
 internal struct KnownApplication
 {
+#if USE_OFFLINE_BASE_PATH
+    static Uri OFFLINE_BASE_URI = new Uri("file://A:/sample/path/");
+#endif
+#if USE_ATOD_CDN
+    static Uri ATOD_CDN_BASE_URI = new Uri("https://atod-cdn.raisingthefloor.org/");
+#endif
+
     public enum IdValue
     {
         AutoHotkey,
@@ -137,32 +147,28 @@ internal struct KnownApplication
             case IdValue.AutoHotkey:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/autohotkey/AutoHotkey_2.0.11_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", new IAtodChecksum.Sha256([81, 10, 131, 59, 221, 15, 137, 108, 195, 152, 234, 174, 79, 244, 117, 245, 183, 207, 227, 118, 73, 239, 191, 100, 123, 80, 210, 30, 68, 35, 148, 185])),
-                        // NOTE: we had problems with the AutoHotkey CDN returning HTTP 403 in testing; for now, we're using the AToD CDN instead
-                        //new IAtodOperation.Download(new Uri("https://www.autohotkey.com/download/2.0/AutoHotkey_2.0.11_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", new IAtodChecksum.Sha256([81, 10, 131, 59, 221, 15, 137, 108, 195, 152, 234, 174, 79, 244, 117, 245, 183, 207, 227, 118, 73, 239, 191, 100, 123, 80, 210, 30, 68, 35, 148, 185])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "AutoHotkey_2.0.11_setup.exe", "/silent", [], null, true),
                     ];
                 break;
             case IdValue.BuildABoard:
                 result = 
                     [
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/buildaboard/bab220r7_win_7-11.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "bab220r7_win_7-11.exe", new IAtodChecksum.Sha256([5, 119, 199, 0, 179, 224, 50, 132, 212, 73, 223, 118, 101, 145, 65, 143, 217, 30, 217, 149, 1, 160, 175, 154, 163, 91, 40, 217, 177, 212, 230, 61])),
-                        new IAtodOperation.Download(new Uri("https://www.imgpresents.com/downloads/secure/bab220r7_win_7-11.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "bab220r7_win_7-11.exe", new IAtodChecksum.Sha256([5, 119, 199, 0, 179, 224, 50, 132, 212, 73, 223, 118, 101, 145, 65, 143, 217, 30, 217, 149, 1, 160, 175, 154, 163, 91, 40, 217, 177, 212, 230, 61])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "bab220r7_win_7-11.exe", "/Q", [], null, true),
                     ];
                 break;
             case IdValue.CameraMouse:
                 result =
                     [
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/cameramouse/CameraMouse2018Installer.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CameraMouse2018Installer.exe", new IAtodChecksum.Sha256([46, 79, 235, 219, 64, 193, 9, 39, 54, 33, 199, 223, 31, 66, 226, 80, 196, 144, 214, 172, 6, 147, 65, 80, 239, 220, 234, 126, 200, 111, 68, 52])),
-                        new IAtodOperation.Download(new Uri("http://www.cameramouse.org/downloads/CameraMouse2018Installer.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CameraMouse2018Installer.exe", new IAtodChecksum.Sha256([46, 79, 235, 219, 64, 193, 9, 39, 54, 33, 199, 223, 31, 66, 226, 80, 196, 144, 214, 172, 6, 147, 65, 80, 239, 220, 234, 126, 200, 111, 68, 52])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "CameraMouse2018Installer.exe", "/VERYSILENT", [], null, true),
                     ];
                 break;
             case IdValue.ClaroRead:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/claroread/ClaroRead-12.0.29-auth-bundle.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ClaroRead-12.0.29-auth-bundle.zip", new IAtodChecksum.Sha256([71, 107, 184, 235, 96, 196, 0, 70, 56, 229, 227, 209, 126, 188, 46, 17, 211, 118, 45, 14, 31, 184, 124, 58, 145, 132, 207, 46, 211, 194, 176, 120])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "ClaroRead-12.0.29-auth-bundle.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ClaroRead-int-12.0.29-auth.msi", null, RequiresElevation: true),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Capture-int-8.2.5-auth.msi", null, RequiresElevation: true),
@@ -174,7 +180,7 @@ internal struct KnownApplication
             case IdValue.ClaroReadSe:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/claroreadse/ClaroReadSE-12.0.29-auth.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ClaroReadSE-12.0.29-auth.zip", new IAtodChecksum.Sha256([10, 216, 206, 64, 233, 62, 147, 47, 173, 200, 128, 149, 102, 213, 0, 140, 116, 0, 210, 33, 111, 211, 74, 70, 140, 74, 135, 26, 106, 206, 3, 126])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "ClaroReadSE-12.0.29-auth.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ClaroReadSE-int-12.0.29-auth.msi", null, RequiresElevation: true),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ScanScreenPlus-int-2.2.4-net.msi", null, RequiresElevation: true),
@@ -184,31 +190,28 @@ internal struct KnownApplication
                 // NOTE: this MSI is not digitally signed and should not be included in the catalog until it can be authenticated (and even then, it should probably be forced to use UAC individually for consumers)
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/clickntype/CNTsetup.msi"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "CNTsetup.msi", new IAtodChecksum.Sha256([247, 39, 177, 189, 83, 5, 117, 0, 156, 194, 197, 39, 178, 75, 17, 158, 11, 182, 44, 216, 240, 103, 55, 228, 156, 122, 103, 243, 197, 141, 49, 102])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("downloadfolder"), "CNTsetup.msi", null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.ComfortOsk:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/comfortosk/ComfortOSKSetup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ComfortOSKSetup.exe", new IAtodChecksum.Sha256([47, 50, 152, 31, 84, 136, 66, 70, 235, 149, 2, 171, 74, 145, 63, 162, 219, 199, 185, 249, 179, 244, 0, 127, 24, 199, 74, 255, 51, 29, 161, 34])),
-                        //new IAtodOperation.Download(new Uri("https://www.comfortsoftware.com/download/ComfortOSKSetup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ComfortOSKSetup.exe", new IAtodChecksum.Sha256([47, 50, 152, 31, 84, 136, 66, 70, 235, 149, 2, 171, 74, 145, 63, 162, 219, 199, 185, 249, 179, 244, 0, 127, 24, 199, 74, 255, 51, 29, 161, 34])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "ComfortOSKSetup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                     ];
                 break;
             case IdValue.Communicator5:
                 result =
                     [
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/communicator5/TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", new IAtodChecksum.Sha256([166, 250, 23, 4, 104, 200, 73, 99, 181, 133, 233, 25, 48, 23, 179, 100, 68, 37, 145, 200, 35, 192, 159, 168, 164, 220, 248, 225, 14, 66, 57, 31])),
-                        new IAtodOperation.Download(new Uri("https://download.mytobiidynavox.com/Communicator/software/5.6.1/TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", new IAtodChecksum.Sha256([166, 250, 23, 4, 104, 200, 73, 99, 181, 133, 233, 25, 48, 23, 179, 100, 68, 37, 145, 200, 35, 192, 159, 168, 164, 220, 248, 225, 14, 66, 57, 31])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe", "/SILENT", [], null, true),
                     ];
                 break;
             case IdValue.CoWriter:
                 result =
                     [
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/cowriter/cowriter-universal-desktop.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "cowriter-universal-desktop.zip", new IAtodChecksum.Sha256([161, 17, 99, 194, 63, 214, 199, 187, 55, 65, 121, 192, 191, 184, 150, 177, 4, 92, 191, 174, 53, 80, 60, 209, 30, 46, 11, 137, 44, 250, 65, 160])),
-                        new IAtodOperation.Download(new Uri("http://donjohnston.com/wp-content/downloads/products/cowriter-universal-desktop.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "cowriter-universal-desktop.zip", new IAtodChecksum.Sha256([161, 17, 99, 194, 63, 214, 199, 187, 55, 65, 121, 192, 191, 184, 150, 177, 4, 92, 191, 174, 53, 80, 60, 209, 30, 46, 11, 137, 44, 250, 65, 160])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "cowriter-universal-desktop.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "CoWriter Universal Desktop.msi", null, RequiresElevation: true),
                     ];
@@ -216,8 +219,7 @@ internal struct KnownApplication
             case IdValue.DolphinScreenReader:
                 result =
                     [
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/dolphinscreenreader/ScreenReader_22.04_English_(United_States)_NETWORK.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ScreenReader_22.04_English_(United_States)_NETWORK.zip", new IAtodChecksum.Sha256([10, 9, 68, 124, 151, 69, 51, 35, 52, 38, 250, 19, 105, 129, 188, 249, 101, 101, 1, 43, 207, 49, 10, 109, 1, 0, 123, 94, 216, 152, 46, 232])),
-                        new IAtodOperation.Download(new Uri("https://yourdolphin.com/downloads/product?pvid=552&lid=2&network=true"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ScreenReader_22.04_English_(United_States)_NETWORK.zip", new IAtodChecksum.Sha256([10, 9, 68, 124, 151, 69, 51, 35, 52, 38, 250, 19, 105, 129, 188, 249, 101, 101, 1, 43, 207, 49, 10, 109, 1, 0, 123, 94, 216, 152, 46, 232])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "ScreenReader_22.04_English_(United_States)_NETWORK.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         //
                         // NOTE: for MicrosoftEdgeWebView2RuntimeInstaller deployment details, see: https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution
@@ -251,15 +253,14 @@ internal struct KnownApplication
                 result =
                     [
                         // Intel 32-bit (also works on 64-bit)
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/dragger/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256([192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232])),
-                        new IAtodOperation.Download(new Uri("https://orin.com/binaries/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256([192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", "/qn", [], null, true),
                     ];
                 break;
             case IdValue.Fusion:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/fusion/F2024.2312.8.400.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "F2024.2312.8.400.zip", new IAtodChecksum.Sha256([209, 96, 112, 214, 229, 63, 194, 206, 217, 63, 139, 224, 91, 194, 33, 197, 137, 179, 81, 243, 64, 67, 2, 240, 225, 71, 59, 90, 249, 250, 50, 53])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "F2024.2312.8.400.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         ////
                         //// NOTE: for MicrosoftEdgeWebView2RuntimeInstaller deployment details, see: https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution
@@ -355,7 +356,7 @@ internal struct KnownApplication
             case IdValue.Jaws:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/jaws/J2024.2312.53.400-any.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "J2024.2312.53.400-any.zip", new IAtodChecksum.Sha256([115, 195, 31, 0, 11, 117, 21, 119, 17, 70, 116, 82, 47, 92, 62, 240, 26, 212, 231, 161, 105, 164, 176, 53, 98, 114, 204, 18, 152, 189, 126, 199])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "J2024.2312.53.400-any.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         ////
                         //// NOTE: for MicrosoftEdgeWebView2RuntimeInstaller deployment details, see: https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution
@@ -419,20 +420,18 @@ internal struct KnownApplication
                 result =
                     [
                         // Intel 64-bit
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/magic/M15.0.2014.400-enu-x64.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", new IAtodChecksum.Sha256([117, 43, 40, 31, 213, 216, 116, 36, 163, 80, 21, 225, 236, 198, 3, 98, 216, 80, 190, 74, 152, 147, 124, 179, 180, 103, 218, 218, 33, 248, 175, 208])),
-                        new IAtodOperation.Download(new Uri("https://magic15.vfo.digital/1502013NT2244W/M15.0.2014.400-enu-x64.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", new IAtodChecksum.Sha256([117, 43, 40, 31, 213, 216, 116, 36, 163, 80, 21, 225, 236, 198, 3, 98, 216, 80, 190, 74, 152, 147, 124, 179, 180, 103, 218, 218, 33, 248, 175, 208])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "M15.0.2014.400-enu-x64.exe", "/type silent", [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                         //
                         // Intel 32-bit
-                        ////new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/magic/M15.0.2014.400-enu-x86.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x86.exe", new IAtodChecksum.Sha256([191, 242, 8, 62, 97, 92, 119, 166, 122, 208, 203, 88, 108, 200, 56, 65, 5, 197, 43, 69, 56, 82, 107, 0, 78, 111, 94, 99, 189, 235, 169, 128])),
-                        //new IAtodOperation.Download(new Uri("https://magic15.vfo.digital/1502013NT2244W/M15.0.2014.400-enu-x86.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "M15.0.2014.400-enu-x86.exe", new IAtodChecksum.Sha256([191, 242, 8, 62, 97, 92, 119, 166, 122, 208, 203, 88, 108, 200, 56, 65, 5, 197, 43, 69, 56, 82, 107, 0, 78, 111, 94, 99, 189, 235, 169, 128])),
+                        //this.GetInstallDownloadOperation(),
                         //new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "M15.0.2014.400-enu-x86.exe", "/type silent", STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                     ];
                 break;
             case IdValue.Nvda:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://www.nvaccess.org/download/nvda/releases/2023.3.1/nvda_2023.3.1.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "nvda_2023.3.1.exe", new IAtodChecksum.Sha256([181, 55, 16, 36, 104, 67, 106, 185, 62, 15, 230, 60, 247, 140, 138, 220, 84, 66, 235, 190, 208, 88, 146, 119, 212, 92, 60, 185, 196, 239, 140, 114])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--minimal --install-silent", [], null, true),
                     ];
                 break;
@@ -440,16 +439,14 @@ internal struct KnownApplication
                 result =
                     [
                         // Intel 64-bit (presumably, based on the 64b filename)
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/purple/Purple_P3_9.6.1-3513-64b.msi"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "Purple_P3_9.6.1-3513-64b.msi", new IAtodChecksum.Sha256([150, 220, 62, 126, 42, 170, 35, 35, 144, 175, 63, 143, 147, 215, 67, 168, 203, 118, 93, 241, 10, 254, 67, 224, 147, 168, 255, 220, 225, 167, 117, 2])),
-                        new IAtodOperation.Download(new Uri("https://s3.amazonaws.com/PurpleDownloads/P3/Purple_P3_9.6.1-3513-64b.msi"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "Purple_P3_9.6.1-3513-64b.msi", new IAtodChecksum.Sha256([150, 220, 62, 126, 42, 170, 35, 35, 144, 175, 63, 143, 147, 215, 67, 168, 203, 118, 93, 241, 10, 254, 67, 224, 147, 168, 255, 220, 225, 167, 117, 2])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("downloadfolder"), "Purple_P3_9.6.1-3513-64b.msi", new() { { "WRAPPED_ARGUMENTS", "\"--mode unattended\"" } }, RequiresElevation: true),
                     ];
                 break;
             case IdValue.ReadAndWrite:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/us/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip", null), // US download MSI
-                        //new AtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/uk/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip", null), // UK download MSI
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "setup.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi", null, RequiresElevation: true),
                     ];
@@ -457,25 +454,21 @@ internal struct KnownApplication
             case IdValue.SmyleMouse:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/smylemouse/SmyleMouse_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SmyleMouse_setup.exe", new IAtodChecksum.Sha256([11, 230, 164, 22, 125, 9, 32, 251, 19, 236, 201, 60, 198, 123, 32, 134, 156, 40, 222, 214, 5, 7, 223, 7, 128, 222, 144, 7, 16, 225, 248, 94])),
-                        //new IAtodOperation.Download(new Uri("http://www.smylemouse.com/example_downloads_folder/SmyleMouse_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SmyleMouse_setup.exe", new IAtodChecksum.Sha256([11, 230, 164, 22, 125, 9, 32, 251, 19, 236, 201, 60, 198, 123, 32, 134, 156, 40, 222, 214, 5, 7, 223, 7, 128, 222, 144, 7, 16, 225, 248, 94])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SmyleMouse_setup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                     ];
                 break;
             case IdValue.SofType:
                 result =
                     [
-                        // Intel 32-bit (also works on 64-bit)
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/softype/SofTypeSetup5.0.1074.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", new IAtodChecksum.Sha256([7, 194, 43, 36, 173, 85, 39, 1, 90, 164, 199, 126, 119, 42, 88, 220, 237, 100, 180, 138, 132, 56, 211, 126, 203, 95, 151, 150, 184, 245, 123, 31])),
-                        new IAtodOperation.Download(new Uri("https://orin.com/binaries/SofTypeSetup5.0.1074.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", new IAtodChecksum.Sha256([7, 194, 43, 36, 173, 85, 39, 1, 90, 164, 199, 126, 119, 42, 88, 220, 237, 100, 180, 138, 132, 56, 211, 126, 203, 95, 151, 150, 184, 245, 123, 31])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SofTypeSetup5.0.1074.0.exe", "/qn", [], null, true),
                     ];
                 break;
             case IdValue.SuperNovaMagnifier:
                 result = 
                     [
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/supernovamagnifier/SuperNova_Magnifier_22.04_English_(United_States)_NETWORK.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SuperNova_Magnifier_22.04_English_(United_States)_NETWORK.zip", new IAtodChecksum.Sha256([75, 230, 63, 108, 233, 45, 206, 131, 184, 250, 237, 149, 69, 5, 36, 56, 41, 71, 213, 154, 133, 68, 32, 149, 167, 53, 179, 162, 124, 162, 227, 1])),
-                        new IAtodOperation.Download(new Uri("https://yourdolphin.com/downloads/product?pvid=554&lid=2&network=true"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SuperNova_Magnifier_22.04_English_(United_States)_NETWORK.zip", new IAtodChecksum.Sha256([75, 230, 63, 108, 233, 45, 206, 131, 184, 250, 237, 149, 69, 5, 36, 56, 41, 71, 213, 154, 133, 68, 32, 149, 167, 53, 179, 162, 124, 162, 227, 17])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "SuperNova_Magnifier_22.04_English_(United_States)_NETWORK.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         //
                         // NOTE: for MicrosoftEdgeWebView2RuntimeInstaller deployment details, see: https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution
@@ -500,8 +493,7 @@ internal struct KnownApplication
             case IdValue.SuperNovaMagnifierAndSpeech:
                 result =
                     [
-                        //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/supernovamagnifierandspeech/SuperNova_Magnifier_&_Speech_22.04_English_(United_States)_NETWORK.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SuperNova_Magnifier_&_Speech_22.04_English_(United_States)_NETWORK", new IAtodChecksum.Sha256([177, 168, 203, 125, 224, 250, 32, 161, 89, 193, 190, 62, 99, 104, 24, 41, 159, 73, 240, 102, 41, 211, 31, 89, 190, 117, 81, 139, 179, 211, 102, 148])),
-                        new IAtodOperation.Download(new Uri("https://yourdolphin.com/downloads/product?pvid=556&lid=2&network=true"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SuperNova_Magnifier_&_Speech_22.04_English_(United_States)_NETWORK.zip", new IAtodChecksum.Sha256([177, 168, 203, 125, 224, 250, 32, 161, 89, 193, 190, 62, 99, 104, 24, 41, 159, 73, 240, 102, 41, 211, 31, 89, 190, 117, 81, 139, 179, 211, 102, 148])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "SuperNova_Magnifier_&_Speech_22.04_English_(United_States)_NETWORK.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         //
                         // NOTE: for MicrosoftEdgeWebView2RuntimeInstaller deployment details, see: https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution
@@ -534,7 +526,7 @@ internal struct KnownApplication
             case IdValue.ZoomText:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/zoomtext/ZT2024.2312.26.400.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "ZT2024.2312.26.400.zip", new IAtodChecksum.Sha256([157, 16, 198, 230, 243, 66, 199, 30, 185, 0, 27, 62, 32, 52, 6, 59, 175, 254, 1, 43, 177, 125, 237, 198, 153, 74, 41, 210, 253, 71, 162, 72])),
+                        this.GetInstallDownloadOperation(),
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "ZT2024.2312.26.400.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "vcredist2022_x86.exe", "/install /quiet /norestart", [], null, true),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "vcredist2022_x64.exe", "/install /quiet /norestart", [], null, true),
@@ -569,6 +561,173 @@ internal struct KnownApplication
         }
 
         return result;
+    }
+
+    private IAtodOperation GetInstallDownloadOperation()
+    {
+        var (directDownloadUri, cdnRelativePath, filename, checksumAsNullable) = this.GetDownloadUriAndCdnRelativePathAndFilenameAndChecksum();
+#if USE_OFFLINE_BASE_PATH
+        Uri uriToOfflineFile = new Uri(OFFLINE_BASE_URI, cdnRelativePath);
+        return new IAtodOperation.Download(uriToOfflineFile, AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), filename, checksumAsNullable);
+#elif USE_ATOD_CDN
+        Uri uriToCdnFile = new Uri(ATOD_CDN_BASE_URI, cdnRelativePath);
+        return new IAtodOperation.Download(uriToCdnFile, AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), filename, checksumAsNullable);
+#else
+        return new IAtodOperation.Download(directDownloadUri, AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), filename, checksumAsNullable);
+#endif
+    }
+
+    private (Uri DirectDownloadUri, string CdnRelativePath, string Filename, IAtodChecksum? Checksum) GetDownloadUriAndCdnRelativePathAndFilenameAndChecksum()
+    {
+        return this.Id switch
+        {
+            IdValue.AutoHotkey => (
+                // NOTE: we had problems with the AutoHotkey CDN returning HTTP 403 in testing; for now, we're using the AToD CDN instead
+                //DirectDownloadUri: new Uri("https://www.autohotkey.com/download/2.0/AutoHotkey_2.0.11_setup.exe"),
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/autohotkey/AutoHotkey_2.0.11_setup.exe"), 
+                CdnRelativePath: "autohotkey/AutoHotkey_2.0.11_setup.exe",
+                Filename: "AutoHotkey_2.0.11_setup.exe", 
+                Checksum: new IAtodChecksum.Sha256([81, 10, 131, 59, 221, 15, 137, 108, 195, 152, 234, 174, 79, 244, 117, 245, 183, 207, 227, 118, 73, 239, 191, 100, 123, 80, 210, 30, 68, 35, 148, 185])
+                ),
+            IdValue.BuildABoard => (
+                DirectDownloadUri: new Uri("https://www.imgpresents.com/downloads/secure/bab220r7_win_7-11.exe"),
+                CdnRelativePath: "buildaboard/bab220r7_win_7-11.exe",
+                Filename: "bab220r7_win_7-11.exe",
+                Checksum: new IAtodChecksum.Sha256([5, 119, 199, 0, 179, 224, 50, 132, 212, 73, 223, 118, 101, 145, 65, 143, 217, 30, 217, 149, 1, 160, 175, 154, 163, 91, 40, 217, 177, 212, 230, 61])
+                ),
+            IdValue.CameraMouse => (
+                DirectDownloadUri: new Uri("http://www.cameramouse.org/downloads/CameraMouse2018Installer.exe"),
+                CdnRelativePath: "cameramouse/CameraMouse2018Installer.exe",
+                Filename: "CameraMouse2018Installer.exe",
+                Checksum: new IAtodChecksum.Sha256([46, 79, 235, 219, 64, 193, 9, 39, 54, 33, 199, 223, 31, 66, 226, 80, 196, 144, 214, 172, 6, 147, 65, 80, 239, 220, 234, 126, 200, 111, 68, 52])
+                ),
+            IdValue.ClaroRead => (
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/claroread/ClaroRead-12.0.29-auth-bundle.zip"),
+                CdnRelativePath: "claroread/ClaroRead-12.0.29-auth-bundle.zip",
+                Filename: "ClaroRead-12.0.29-auth-bundle.zip",
+                Checksum: new IAtodChecksum.Sha256([71, 107, 184, 235, 96, 196, 0, 70, 56, 229, 227, 209, 126, 188, 46, 17, 211, 118, 45, 14, 31, 184, 124, 58, 145, 132, 207, 46, 211, 194, 176, 120])
+                ),
+            IdValue.ClaroReadSe => (
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/claroreadse/ClaroReadSE-12.0.29-auth.zip"),
+                CdnRelativePath: "claroreadse/ClaroReadSE-12.0.29-auth.zip",
+                Filename: "ClaroReadSE-12.0.29-auth.zip",
+                Checksum: new IAtodChecksum.Sha256([10, 216, 206, 64, 233, 62, 147, 47, 173, 200, 128, 149, 102, 213, 0, 140, 116, 0, 210, 33, 111, 211, 74, 70, 140, 74, 135, 26, 106, 206, 3, 126])
+                ),
+            IdValue.ClickNType => (
+                // NOTE: this MSI is not digitally signed and should not be included in the catalog until it can be authenticated (and even then, it should probably be forced to use UAC individually for consumers)
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/clickntype/CNTsetup.msi"),
+                CdnRelativePath: "clickntype/CNTsetup.msi",
+                Filename: "CNTsetup.msi",
+                Checksum: new IAtodChecksum.Sha256([247, 39, 177, 189, 83, 5, 117, 0, 156, 194, 197, 39, 178, 75, 17, 158, 11, 182, 44, 216, 240, 103, 55, 228, 156, 122, 103, 243, 197, 141, 49, 102])
+                ),
+            IdValue.ComfortOsk => (
+                //DirectDownloadUri: new IAtodOperation.Download(new Uri("https://www.comfortsoftware.com/download/ComfortOSKSetup.exe"),
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/comfortosk/ComfortOSKSetup.exe"),
+                CdnRelativePath: "comfortosk/ComfortOSKSetup.exe",
+                Filename: "ComfortOSKSetup.exe",
+                Checksum: new IAtodChecksum.Sha256([47, 50, 152, 31, 84, 136, 66, 70, 235, 149, 2, 171, 74, 145, 63, 162, 219, 199, 185, 249, 179, 244, 0, 127, 24, 199, 74, 255, 51, 29, 161, 34])
+                ),
+            IdValue.Communicator5 => (
+                DirectDownloadUri: new Uri("https://download.mytobiidynavox.com/Communicator/software/5.6.1/TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe"),
+                CdnRelativePath: "communicator5/TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe",
+                Filename: "TobiiDynavox_CommunicatorSuite_Installer_5.6.1.5584_en-US.exe",
+                Checksum: new IAtodChecksum.Sha256([166, 250, 23, 4, 104, 200, 73, 99, 181, 133, 233, 25, 48, 23, 179, 100, 68, 37, 145, 200, 35, 192, 159, 168, 164, 220, 248, 225, 14, 66, 57, 31])
+                ),
+            IdValue.CoWriter => (
+                DirectDownloadUri: new Uri("http://donjohnston.com/wp-content/downloads/products/cowriter-universal-desktop.zip"),
+                CdnRelativePath: "cowriter/cowriter-universal-desktop.zip",
+                Filename: "cowriter-universal-desktop.zip",
+                Checksum: new IAtodChecksum.Sha256([161, 17, 99, 194, 63, 214, 199, 187, 55, 65, 121, 192, 191, 184, 150, 177, 4, 92, 191, 174, 53, 80, 60, 209, 30, 46, 11, 137, 44, 250, 65, 160])
+                ),
+            IdValue.DolphinScreenReader => (
+                DirectDownloadUri: new Uri("https://yourdolphin.com/downloads/product?pvid=552&lid=2&network=true"),
+                CdnRelativePath: "dolphinscreenreader/ScreenReader_22.04_English_(United_States)_NETWORK.zip",
+                Filename: "ScreenReader_22.04_English_(United_States)_NETWORK.zip",
+                Checksum: new IAtodChecksum.Sha256([10, 9, 68, 124, 151, 69, 51, 35, 52, 38, 250, 19, 105, 129, 188, 249, 101, 101, 1, 43, 207, 49, 10, 109, 1, 0, 123, 94, 216, 152, 46, 232])
+                ),
+            IdValue.Dragger => (
+                DirectDownloadUri: new Uri("https://orin.com/binaries/DraggerSetup2.0.1350.0.exe"),
+                CdnRelativePath: "dragger/DraggerSetup2.0.1350.0.exe",
+                Filename: "DraggerSetup2.0.1350.0.exe",
+                Checksum: new IAtodChecksum.Sha256([192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232])
+                ),
+            IdValue.Fusion => (
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/fusion/F2024.2312.8.400.zip"),
+                CdnRelativePath: "fusion/F2024.2312.8.400.zip",
+                Filename: "F2024.2312.8.400.zip",
+                Checksum: new IAtodChecksum.Sha256([209, 96, 112, 214, 229, 63, 194, 206, 217, 63, 139, 224, 91, 194, 33, 197, 137, 179, 81, 243, 64, 67, 2, 240, 225, 71, 59, 90, 249, 250, 50, 53])
+                ),
+            IdValue.Jaws => (
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/jaws/J2024.2312.53.400-any.zip"),
+                CdnRelativePath: "jaws/J2024.2312.53.400-any.zip",
+                Filename: "J2024.2312.53.400-any.zip",
+                Checksum: new IAtodChecksum.Sha256([115, 195, 31, 0, 11, 117, 21, 119, 17, 70, 116, 82, 47, 92, 62, 240, 26, 212, 231, 161, 105, 164, 176, 53, 98, 114, 204, 18, 152, 189, 126, 199])
+                ),
+            IdValue.Magic => (
+                // Intel 64-bit
+                DirectDownloadUri: new Uri("https://magic15.vfo.digital/1502013NT2244W/M15.0.2014.400-enu-x64.exe"),
+                CdnRelativePath: "magic/M15.0.2014.400-enu-x64.exe",
+                //// Intel 32-bit
+                //DirectDownloadUri: new Uri("https://magic15.vfo.digital/1502013NT2244W/M15.0.2014.400-enu-x86.exe"),
+                //CdnRelativePath: "magic/M15.0.2014.400-enu-x86.exe",
+                Filename: "M15.0.2014.400-enu-x64.exe",
+                Checksum: new IAtodChecksum.Sha256([117, 43, 40, 31, 213, 216, 116, 36, 163, 80, 21, 225, 236, 198, 3, 98, 216, 80, 190, 74, 152, 147, 124, 179, 180, 103, 218, 218, 33, 248, 175, 208])
+                ),
+            IdValue.Nvda => (
+                DirectDownloadUri: new Uri("https://www.nvaccess.org/download/nvda/releases/2023.3.1/nvda_2023.3.1.exe"),
+                CdnRelativePath: "nvda/nvda_2023.3.1.exe",
+                Filename: "nvda_2023.3.1.exe",
+                Checksum: new IAtodChecksum.Sha256([181, 55, 16, 36, 104, 67, 106, 185, 62, 15, 230, 60, 247, 140, 138, 220, 84, 66, 235, 190, 208, 88, 146, 119, 212, 92, 60, 185, 196, 239, 140, 114])
+                ),
+            IdValue.PurpleP3 => (
+                DirectDownloadUri: new Uri("https://s3.amazonaws.com/PurpleDownloads/P3/Purple_P3_9.6.1-3513-64b.msi"),
+                CdnRelativePath: "purple/Purple_P3_9.6.1-3513-64b.msi",
+                Filename: "Purple_P3_9.6.1-3513-64b.msi",
+                Checksum: new IAtodChecksum.Sha256([150, 220, 62, 126, 42, 170, 35, 35, 144, 175, 63, 143, 147, 215, 67, 168, 203, 118, 93, 241, 10, 254, 67, 224, 147, 168, 255, 220, 225, 167, 117, 2])
+                ),
+            IdValue.ReadAndWrite => (
+                // US download
+                DirectDownloadUri: new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/us/setup.zip"),
+                CdnRelativePath: "readandwrite/us/setup.zip",
+                // UK download
+                //DirectDownloadUri: new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/uk/setup.zip"),
+                //CdnRelativePath: "readandwrite/uk/setup.zip",
+                Filename: "setup.zip",
+                Checksum: null
+                ),
+            IdValue.SmyleMouse => (
+                //DirectDownloadUri: new Uri("http://www.smylemouse.com/example_downloads_folder/SmyleMouse_setup.exe"),
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/smylemouse/SmyleMouse_setup.exe"),
+                CdnRelativePath: "smylemouse/SmyleMouse_setup.exe",
+                Filename: "SmyleMouse_setup.exe",
+                Checksum: new IAtodChecksum.Sha256([11, 230, 164, 22, 125, 9, 32, 251, 19, 236, 201, 60, 198, 123, 32, 134, 156, 40, 222, 214, 5, 7, 223, 7, 128, 222, 144, 7, 16, 225, 248, 94])
+                ),
+            IdValue.SofType => (
+                DirectDownloadUri: new Uri("https://orin.com/binaries/SofTypeSetup5.0.1074.0.exe"),
+                CdnRelativePath: "softype/SofTypeSetup5.0.1074.0.exe",
+                Filename: "SofTypeSetup5.0.1074.0.exe",
+                Checksum: new IAtodChecksum.Sha256([7, 194, 43, 36, 173, 85, 39, 1, 90, 164, 199, 126, 119, 42, 88, 220, 237, 100, 180, 138, 132, 56, 211, 126, 203, 95, 151, 150, 184, 245, 123, 31])
+                ),
+            IdValue.SuperNovaMagnifier => (
+                DirectDownloadUri: new Uri("https://yourdolphin.com/downloads/product?pvid=554&lid=2&network=true"),
+                CdnRelativePath: "supernovamagnifier/SuperNova_Magnifier_22.04_English_(United_States)_NETWORK.zip",
+                Filename: "SuperNova_Magnifier_22.04_English_(United_States)_NETWORK.zip",
+                Checksum: new IAtodChecksum.Sha256([75, 230, 63, 108, 233, 45, 206, 131, 184, 250, 237, 149, 69, 5, 36, 56, 41, 71, 213, 154, 133, 68, 32, 149, 167, 53, 179, 162, 124, 162, 227, 17])
+                ),
+            IdValue.SuperNovaMagnifierAndSpeech => (
+                DirectDownloadUri: new Uri("https://yourdolphin.com/downloads/product?pvid=556&lid=2&network=true"),
+                CdnRelativePath: "supernovamagnifierandspeech/SuperNova_Magnifier_&_Speech_22.04_English_(United_States)_NETWORK.zip",
+                Filename: "SuperNova_Magnifier_&_Speech_22.04_English_(United_States)_NETWORK.zip",
+                Checksum: new IAtodChecksum.Sha256([177, 168, 203, 125, 224, 250, 32, 161, 89, 193, 190, 62, 99, 104, 24, 41, 159, 73, 240, 102, 41, 211, 31, 89, 190, 117, 81, 139, 179, 211, 102, 148])
+                ),
+            IdValue.ZoomText => (
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/zoomtext/ZT2024.2312.26.400.zip"),
+                CdnRelativePath: "zoomtext/ZT2024.2312.26.400.zip",
+                Filename: "ZT2024.2312.26.400.zip",
+                Checksum: new IAtodChecksum.Sha256([157, 16, 198, 230, 243, 66, 199, 30, 185, 0, 27, 62, 32, 52, 6, 59, 175, 254, 1, 43, 177, 125, 237, 198, 153, 74, 41, 210, 253, 71, 162, 72])
+                ),
+            _ => throw new Exception("invalid code path"),
+        };
     }
 
     public List<IAtodOperation>? GetUninstallOperations()
