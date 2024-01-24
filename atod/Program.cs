@@ -1200,7 +1200,16 @@ public class Program
     private static void WriteBannerToConsole()
     {
         var executingAssemblyVersion = Assembly.GetExecutingAssembly().GetName().Version!;
-        var versionString = executingAssemblyVersion.Major.ToString() + "." + executingAssemblyVersion.Minor.ToString() + " (build " + executingAssemblyVersion.Build.ToString() + ")";
+        var versionString = executingAssemblyVersion.Major.ToString() + "." + executingAssemblyVersion.Minor.ToString();
+        // NOTE: manually-compiled (dev/test/custom) builds will typically have a build # of 0
+        if (executingAssemblyVersion.Build != 0)
+        {
+            versionString += " (build " + executingAssemblyVersion.Build.ToString() + ")";
+        }
+        else
+        {
+            versionString = " (manual build)";
+        }
         //
         var executingAssemblyCopyrightAttribute = Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyCopyrightAttribute));
         string? copyrightString = null;
