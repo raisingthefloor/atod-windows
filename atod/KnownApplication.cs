@@ -35,6 +35,7 @@ internal struct KnownApplication
         CoWriter,
         DolphinScreenReader,
         Dragger,
+        Fusion,
         Magic,
         Nvda,
         PurpleP3,
@@ -58,6 +59,7 @@ internal struct KnownApplication
     public static readonly KnownApplication COWRITER = new() { Id = IdValue.CoWriter };
     public static readonly KnownApplication DOLPHIN_SCREEN_READER = new() { Id = IdValue.DolphinScreenReader };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
+    public static readonly KnownApplication FUSION = new() { Id = IdValue.Fusion };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
     public static readonly KnownApplication PURPLE_P3 = new() { Id = IdValue.PurpleP3 };
@@ -93,6 +95,8 @@ internal struct KnownApplication
                 return KnownApplication.DOLPHIN_SCREEN_READER;
             case "dragger":
                 return KnownApplication.DRAGGER;
+            case "fusion":
+                return KnownApplication.FUSION;
             case "magic":
                 return KnownApplication.MAGIC;
             case "nvda":
@@ -242,6 +246,87 @@ internal struct KnownApplication
                         //new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/dragger/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256([192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232])),
                         new IAtodOperation.Download(new Uri("https://orin.com/binaries/DraggerSetup2.0.1350.0.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", new IAtodChecksum.Sha256([192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232])),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", "/qn", [], null, true),
+                    ];
+                break;
+            case IdValue.Fusion:
+                result =
+                    [
+                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/fusion/F2024.2312.8.400.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "F2024.2312.8.400.zip", new IAtodChecksum.Sha256([209, 96, 112, 214, 229, 63, 194, 206, 217, 63, 139, 224, 91, 194, 33, 197, 137, 179, 81, 243, 64, 67, 2, 240, 225, 71, 59, 90, 249, 250, 50, 53])),
+                        new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "F2024.2312.8.400.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "vcredist2022_x86.exe", "/install /quiet /norestart", [], null, true),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "vcredist2022_x64.exe", "/install /quiet /norestart", [], null, true),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "windowsdesktop-runtime-6.0.25-win-x86.exe", "/install /quiet /norestart", [], null, true),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "windowsdesktop-runtime-6.0.25-win-x64.exe", "/install /quiet /norestart", [], null, true),
+                        //new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "Sentinel System Driver Installer 7.5.0.exe", "/S /v/qn", [], null, true),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "Sentinel System Driver Installer 7.6.1.exe", "/S /v/qn", [], null, true),
+                        new IAtodOperation.CreateRegistryKey(Microsoft.Win32.Registry.CurrentUser, "Software\\Freedom Scientific", RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Eloquence.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\Utilities.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\fsElevation.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\fsSynth.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\UIAHooks.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        // NOTE: FSReader should not be installed if it is not in the layout for a language
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\FSReader.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        // NOTE: TableOfContents should not be installed if it is not in the layout for a language
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\TableOfContents.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "FSOmnipage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        //new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "FSOmnipageAsian.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x86\\FSOcr.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\FSOcr.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x86\\FSOcrTombstone.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\FSOcrTombstone.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\FSSupportTool.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\ErrorReporting.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\TouchServer.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\FusionInterface.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\Authorization.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\RdpSupport.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\FSCam.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\HookManager.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\AccEventCache.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\GlobalHooksDispatcher.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\GateManager.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\Telemetry.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\VoiceAssistant.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x64\\JAWSBase.msi", new() { { "ARPSYSTEMCOMPONENT", "1" }, { "SETUP_LANGUAGES", "enu" }, { "TANDEM", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\JAWSLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" }, { "PRIMARY_LANGUAGE", "1" }, { "TANDEM", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\JAWSStart.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "arb\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "cht\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "csy\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "dan\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "deu\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "eng\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "esn\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "eti\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "fin\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "fra\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "heb\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "hun\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "isl\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ita\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "jpn\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "kkz\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "kor\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "lvi\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "mki\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "nld\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "nor\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "plk\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ptb\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "rus\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "sky\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "sqi\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "sve\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "trk\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "ukr\\x64\\ZoomTextLanguage.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "x86\\KeyboardManager.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "VocalizerExpressive-2.2.206-enu-Tom-Compact-enu.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "VocalizerExpressive-2.2.206-enu-Zoe-Compact-enu.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\ZoomText.msi", new() { { "ARPSYSTEMCOMPONENT", "1" }, { "PRODUCT_TYPE", "2" }, { "PRIMARY_LANGUAGE", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "enu\\x64\\Fusion.msi", new() { { "ARPSYSTEMCOMPONENT", "1" } }, RequiresElevation: true),
+                        // NOTE: based on early experience, we need to run ZoomTextSetupPackage.exe after completing the install to apply default settings, etc.  In our experience, this was required for JAWS so we do it for ZoomText and Fusion as well.
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "FusionBundle.exe", "/Type silent", [], null, true),
                     ];
                 break;
             case IdValue.Magic:
@@ -489,6 +574,77 @@ internal struct KnownApplication
                 result =
                     [
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DRAGGER, null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.Fusion:
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ELOQUENCE, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_UTILITIES, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ELEVATION, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_SYNTH, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_UIA_HOOKS_1_0, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_FS_READER_3_0, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_JAWS_TRAINING_TABLE_OF_CONTENTS_DAISY_FILES, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OMNIPAGE_20, null, RequiresElevation: true),
+                        //new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OMNIPAGE_ASIAN_##, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OCR_X86, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OCR_X64, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OCR_TOMBSTONE_X86, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OCR_TOMBSTONE_X64, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_SUPPORT_TOOL, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ERROR_REPORTING, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_TOUCH_SERVER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_FUSION_INTERFACE, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_AUTHORIZATION, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_RDP_SUPPORT, null, RequiresElevation: true),
+                        // NOTE: FREEDOM_SCIENTIFIC_USB_CAMERA_DRIVER is assumed to be the same package as "FSCam.msi"
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_USB_CAMERA_DRIVER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_HOOK_MANAGER_2_0, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ACC_EVENT_CACHE, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_GLOBAL_HOOKS_DISPATCHER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_GATE_MANAGER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_TELEMETRY, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_VOICE_ASSISTANT, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_JAWS_2024_BASE, new() { { "FORCE_DEL_USERSETTINGS", "0" } }, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_JAWS_2024_LANGUAGE_ENU, new() { { "FORCE_DEL_USERSETTINGS", "0" } }, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_JAWS_START, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_ARA, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_CHT, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_CSY, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_DAN, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_DEU, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_ENG, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_ESN, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_ETI, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_FIN, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_FRA, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_HEB, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_HUN, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_ISL, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_ITA, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_JPN, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_KKZ, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_KOR, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_LVI, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_MKI, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_NLD, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_NOR, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_PLK, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_PTB, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_RUS, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_SKY, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_SQI, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_SVE, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_TRK, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_LANGUAGE_UKR, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_KEYBOARD_MANAGER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_VOCALIZER_EXPRESSIVE_2_2_TOM_COMPACT, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_VOCALIZER_EXPRESSIVE_2_2_ZOE_COMPACT, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ZOOMTEXT_2004, new() { { "FORCE_DEL_USERSETTINGS", "0" }, { "PRODUCT_TYPE", "2" }, { "PRIMARY_LANGUAGE", "1" } }, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_FUSION_2024, null, RequiresElevation: true),
+                        // NOTE: although this is not documented in the sample uninstall scripts from Freedom Scientific, we must run FusionBundle with "/uninstall /quiet" as arguments (i.e. the QuietUninstallString of "Freedom Scientific Fusion 2024")
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{ca9065af-0c32-414e-97c4-3c669b133d17}", null, null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.Magic:
