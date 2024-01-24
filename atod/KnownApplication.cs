@@ -41,6 +41,7 @@ internal struct KnownApplication
         Nvda,
         PurpleP3,
         ReadAndWrite,
+        SmyleMouse,
         SofType,
         SuperNovaMagnifier,
         SuperNovaMagnifierAndSpeech,
@@ -66,6 +67,7 @@ internal struct KnownApplication
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
     public static readonly KnownApplication PURPLE_P3 = new() { Id = IdValue.PurpleP3 };
     public static readonly KnownApplication READ_AND_WRITE = new() { Id = IdValue.ReadAndWrite };
+    public static readonly KnownApplication SMYLE_MOUSE = new() { Id = IdValue.SmyleMouse };
     public static readonly KnownApplication SOFTYPE = new() { Id = IdValue.SofType };
     public static readonly KnownApplication SUPERNOVA_MAGNIFIER = new() { Id = IdValue.SuperNovaMagnifier };
     public static readonly KnownApplication SUPERNOVA_MAGNIFIER_AND_SPEECH = new() { Id = IdValue.SuperNovaMagnifierAndSpeech };
@@ -109,6 +111,8 @@ internal struct KnownApplication
                 return KnownApplication.PURPLE_P3;
             case "readandwrite":
                 return KnownApplication.READ_AND_WRITE;
+            case "smylemouse":
+                return KnownApplication.SMYLE_MOUSE;
             case "softype":
                 return KnownApplication.SOFTYPE;
             case "supernovamagnifier":
@@ -448,6 +452,14 @@ internal struct KnownApplication
                         //new AtodOperation.Download(new Uri("https://fastdownloads2.texthelp.com/readwrite12/installers/uk/setup.zip"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "setup.zip", null), // UK download MSI
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "setup.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "setup.msi", null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.SmyleMouse:
+                result =
+                    [
+                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/smylemouse/SmyleMouse_Setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SmyleMouse_Setup.exe", new IAtodChecksum.Sha256([11, 230, 164, 22, 125, 9, 32, 251, 19, 236, 201, 60, 198, 123, 32, 134, 156, 40, 222, 214, 5, 7, 223, 7, 128, 222, 144, 7, 16, 225, 248, 94])),
+                        //new IAtodOperation.Download(new Uri("http://www.smylemouse.com/example_downloads_folder/SmyleMouse_Setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SmyleMouse_Setup.exe", new IAtodChecksum.Sha256([11, 230, 164, 22, 125, 9, 32, 251, 19, 236, 201, 60, 198, 123, 32, 134, 156, 40, 222, 214, 5, 7, 223, 7, 128, 222, 144, 7, 16, 225, 248, 94])),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SmyleMouse_Setup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                     ];
                 break;
             case IdValue.SofType:
@@ -797,6 +809,13 @@ internal struct KnownApplication
                     [
                         //new IAtodOperation.UninstallUsingWindowsInstaller(this.GetWindowsInstallerProductCode()!.Value, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.READ_AND_WRITE, null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.SmyleMouse:
+                // NOTE: SmyleMouse has a "QuietUninstallString" registry entry, but it uses "/SILENT" instead of "/VERYSILENT" so we supplement it with "/VERYSILENT"
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{09786633-20A6-48F4-932B-3AF58F730AD0}_is1", new string[] { "/NORESTART /VERYSILENT" }, null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.SofType:
