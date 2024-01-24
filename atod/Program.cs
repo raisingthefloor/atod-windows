@@ -1208,7 +1208,7 @@ public class Program
         }
         else
         {
-            versionString = " (manual build)";
+            versionString += " (manual build)";
         }
         //
         var executingAssemblyCopyrightAttribute = Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyCopyrightAttribute));
