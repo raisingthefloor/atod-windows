@@ -457,9 +457,9 @@ internal struct KnownApplication
             case IdValue.SmyleMouse:
                 result =
                     [
-                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/smylemouse/SmyleMouse_Setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SmyleMouse_Setup.exe", new IAtodChecksum.Sha256([11, 230, 164, 22, 125, 9, 32, 251, 19, 236, 201, 60, 198, 123, 32, 134, 156, 40, 222, 214, 5, 7, 223, 7, 128, 222, 144, 7, 16, 225, 248, 94])),
-                        //new IAtodOperation.Download(new Uri("http://www.smylemouse.com/example_downloads_folder/SmyleMouse_Setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SmyleMouse_Setup.exe", new IAtodChecksum.Sha256([11, 230, 164, 22, 125, 9, 32, 251, 19, 236, 201, 60, 198, 123, 32, 134, 156, 40, 222, 214, 5, 7, 223, 7, 128, 222, 144, 7, 16, 225, 248, 94])),
-                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SmyleMouse_Setup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                        new IAtodOperation.Download(new Uri("https://atod-cdn.raisingthefloor.org/smylemouse/SmyleMouse_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SmyleMouse_setup.exe", new IAtodChecksum.Sha256([11, 230, 164, 22, 125, 9, 32, 251, 19, 236, 201, 60, 198, 123, 32, 134, 156, 40, 222, 214, 5, 7, 223, 7, 128, 222, 144, 7, 16, 225, 248, 94])),
+                        //new IAtodOperation.Download(new Uri("http://www.smylemouse.com/example_downloads_folder/SmyleMouse_setup.exe"), AtodPath.CreateTemporaryFolderForNewPathKey("downloadfolder"), "SmyleMouse_setup.exe", new IAtodChecksum.Sha256([11, 230, 164, 22, 125, 9, 32, 251, 19, 236, 201, 60, 198, 123, 32, 134, 156, 40, 222, 214, 5, 7, 223, 7, 128, 222, 144, 7, 16, 225, 248, 94])),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SmyleMouse_setup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                     ];
                 break;
             case IdValue.SofType:
