@@ -290,6 +290,9 @@ public class Program
         var newAbsolutePathsForTemporaryFiles = new List<string>();
         var newAbsolutePathsForTemporaryFolders = new List<string>();
 
+        // variable to track if any uninstallers were skipped (in case some components of a multi-step uninstall were already uninstalled or otherwise not present)
+        bool uninstallOperationSkippedDueToNotInstalled = false;
+
         // if the operations require elevation, make sure that our process is elevated
         bool atodOperationsRequireElevation = false;
         foreach (var operation in atodOperations)
@@ -799,12 +802,9 @@ public class Program
                         }
                         if (tryGetUninstallRegistryEntryResult.Value is null)
                         {
-                            progressBar.Hide();
-
-                            Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
-                            Console.WriteLine();
-                            Console.WriteLine("Application instance was not found (i.e. product does not appear to be installed).");
-                            return (int)ExitCode.RegistryUninstallerMissing;
+                            // product does not appear to be installed
+                            uninstallOperationSkippedDueToNotInstalled = true;
+                            break;
                         }
                         var uninstallRegistryEntry = tryGetUninstallRegistryEntryResult.Value!.Value;
 
@@ -961,6 +961,13 @@ public class Program
                         var uninstallResult = await windowsInstaller.UninstallAsync(msiProductCode, propertySettings);
                         if (uninstallResult.IsError == true)
                         {
+                            if (uninstallResult.Error!.Win32ErrorCode == 1605 /* ERROR_UNKNOWN_PRODUCT */) 
+                            {
+                                // product does not appear to be installed
+                                uninstallOperationSkippedDueToNotInstalled = true;
+                                break;
+                            }
+
                             progressBar.Hide();
 
                             Console.WriteLine("  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX  Uninstallation Failed");
@@ -1172,6 +1179,11 @@ public class Program
                 break;
             case AtodSequenceType.Uninstall:
                 Console.WriteLine("Application has been uninstalled.");
+                if (uninstallOperationSkippedDueToNotInstalled == true)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("*** Uninstall is complete, but one or more components was not present. ***");
+                }
                 if (rebootRequiredAfterSequence == true)
                 {
                     Console.WriteLine();
