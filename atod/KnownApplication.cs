@@ -681,7 +681,7 @@ internal struct KnownApplication
                 ),
             IdValue.PurpleP3 => (
                 DirectDownloadUri: new Uri("https://s3.amazonaws.com/PurpleDownloads/P3/Purple_P3_9.6.1-3513-64b.msi"),
-                CdnRelativePath: "purple/Purple_P3_9.6.1-3513-64b.msi",
+                CdnRelativePath: "purplep3/Purple_P3_9.6.1-3513-64b.msi",
                 Filename: "Purple_P3_9.6.1-3513-64b.msi",
                 Checksum: new IAtodChecksum.Sha256([150, 220, 62, 126, 42, 170, 35, 35, 144, 175, 63, 143, 147, 215, 67, 168, 203, 118, 93, 241, 10, 254, 67, 224, 147, 168, 255, 220, 225, 167, 117, 2])
                 ),
