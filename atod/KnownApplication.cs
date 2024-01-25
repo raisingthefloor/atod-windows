@@ -45,6 +45,9 @@ internal struct KnownApplication
         CoWriter,
         DolphinScreenReader,
         Dragger,
+        DuxburyBrailleTranslator,
+        Equatio,
+        FreeVirtualKeyboard,
         Fusion,
         Jaws,
         Magic,
@@ -71,6 +74,9 @@ internal struct KnownApplication
     public static readonly KnownApplication COWRITER = new() { Id = IdValue.CoWriter };
     public static readonly KnownApplication DOLPHIN_SCREEN_READER = new() { Id = IdValue.DolphinScreenReader };
     public static readonly KnownApplication DRAGGER = new() { Id = IdValue.Dragger };
+    public static readonly KnownApplication DUXBURY_BRAILLE_TRANSLATOR = new() { Id = IdValue.DuxburyBrailleTranslator };
+    public static readonly KnownApplication EQUATIO = new() { Id = IdValue.Equatio };
+    public static readonly KnownApplication FREE_VIRTUAL_KEYBOARD = new() { Id = IdValue.FreeVirtualKeyboard };
     public static readonly KnownApplication FUSION = new() { Id = IdValue.Fusion };
     public static readonly KnownApplication JAWS = new() { Id = IdValue.Jaws };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
@@ -109,6 +115,12 @@ internal struct KnownApplication
                 return KnownApplication.DOLPHIN_SCREEN_READER;
             case "dragger":
                 return KnownApplication.DRAGGER;
+            case "duxburybrailletranslator":
+                return KnownApplication.DUXBURY_BRAILLE_TRANSLATOR;
+            case "equatio":
+                return KnownApplication.EQUATIO;
+            case "freevirtualkeyboard":
+                return KnownApplication.FREE_VIRTUAL_KEYBOARD;
             case "fusion":
                 return KnownApplication.FUSION;
             case "jaws":
@@ -255,6 +267,29 @@ internal struct KnownApplication
                         // Intel 32-bit (also works on 64-bit)
                         this.GetInstallDownloadOperation(),
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "DraggerSetup2.0.1350.0.exe", "/qn", [], null, true),
+                    ];
+                break;
+            case IdValue.DuxburyBrailleTranslator:
+                result =
+                    [
+                        this.GetInstallDownloadOperation(),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("downloadfolder"), "dbt-1207sr2.msi", null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.Equatio:
+                result =
+                    [
+                        this.GetInstallDownloadOperation(),
+                        new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "Equatio.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Setup.msi", null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.FreeVirtualKeyboard:
+                result =
+                    [
+                        this.GetInstallDownloadOperation(),
+                        new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "FreeVKSetup.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "FreeVKSetup.exe", "/NORESTART /VERYSILENT /RESTARTEXITCODE=" + STANDARD_REBOOT_REQUIRED_EXIT_CODE.ToString(), [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                     ];
                 break;
             case IdValue.Fusion:
@@ -651,6 +686,24 @@ internal struct KnownApplication
                 Filename: "DraggerSetup2.0.1350.0.exe",
                 Checksum: new IAtodChecksum.Sha256([192, 106, 159, 37, 241, 148, 202, 37, 180, 183, 125, 200, 244, 122, 178, 4, 174, 80, 91, 54, 68, 226, 81, 205, 0, 73, 149, 110, 226, 93, 151, 232])
                 ),
+            IdValue.DuxburyBrailleTranslator => (
+                DirectDownloadUri: new Uri("https://www.duxburysystems.org/downloads/dbt_12.7/dbt-1207sr2.msi"),
+                CdnRelativePath: "duxburybrailletranslator/dbt-1207sr2",
+                Filename: "dbt-1207sr2",
+                Checksum: new IAtodChecksum.Sha256([151, 40, 230, 165, 225, 205, 191, 136, 11, 12, 138, 111, 239, 234, 114, 123, 123, 237, 147, 63, 157, 212, 117, 13, 240, 178, 130, 153, 39, 151, 101, 241])
+                ),
+            IdValue.Equatio => (
+                DirectDownloadUri: new Uri("https://fastdownloads2.texthelp.com/equatio_desktop/installers/latest/windows/Equatio.zip"),
+                CdnRelativePath: "equatio/dbt-1207sr2/Equatio.zip",
+                Filename: "Equatio.zip",
+                Checksum: new IAtodChecksum.Sha256([116, 229, 253, 241, 141, 136, 187, 225, 133, 138, 98, 97, 112, 73, 138, 53, 7, 236, 229, 105, 212, 104, 4, 186, 4, 227, 224, 168, 95, 184, 52, 18])
+                ),
+            IdValue.FreeVirtualKeyboard => (
+                DirectDownloadUri: new Uri("https://freevirtualkeyboard.com/FreeVKSetup.zip"),
+                CdnRelativePath: "freevirtualkeyboard/FreeVKSetup.zip",
+                Filename: "FreeVKSetup.zip",
+                Checksum: new IAtodChecksum.Sha256([238, 198, 6, 70, 240, 98, 164, 244, 37, 131, 145, 185, 68, 115, 166, 20, 49, 54, 88, 24, 9, 138, 112, 185, 213, 96, 166, 194, 130, 116, 28, 127])
+                ),
             IdValue.Fusion => (
                 DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/fusion/F2024.2312.8.400.zip"),
                 CdnRelativePath: "fusion/F2024.2312.8.400.zip",
@@ -789,7 +842,7 @@ internal struct KnownApplication
                 // NOTE: ComfortOsk has a "QuietUninstallString" registry entry, but it uses "/SILENT" instead of "/VERYSILENT" so we supplement it with "/VERYSILENT"
                 result =
                     [
-                        new IAtodOperation.UninstallUsingRegistryUninstallString("{6EB17721-6249-417B-99B9-DAF3FD532955}_is1", new string[] { "/NORESTART /VERYSILENT" }, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{6EB17721-6249-417B-99B9-DAF3FD532955}_is1", new string[] { "/VERYSILENT /NORESTART" }, null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.Communicator5:
@@ -827,6 +880,26 @@ internal struct KnownApplication
                 result =
                     [
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DRAGGER, null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.DuxburyBrailleTranslator:
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DUXBURY_BRAILLE_TRANSLATOR, null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.Equatio:
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.EQUATIO, null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.FreeVirtualKeyboard:
+                // NOTE: FreeVirtualKeyboard has a "QuietUninstallString" registry entry, but it uses "/SILENT" instead of "/VERYSILENT" so we supplement it with "/VERYSILENT"
+                // NOTE: the uninstaller is not indicating that the system should be restarted (using an exit code); the exit code is zero.
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{CA4F9519-1A83-4907-8651-F17073A0E1CE}_is1", new string[] { "/VERYSILENT /NORESTART" }, null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.Fusion:
@@ -966,7 +1039,6 @@ internal struct KnownApplication
             case IdValue.ReadAndWrite:
                 result =
                     [
-                        //new IAtodOperation.UninstallUsingWindowsInstaller(this.GetWindowsInstallerProductCode()!.Value, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.READ_AND_WRITE, null, RequiresElevation: true),
                     ];
                 break;
@@ -974,7 +1046,7 @@ internal struct KnownApplication
                 // NOTE: SmyleMouse has a "QuietUninstallString" registry entry, but it uses "/SILENT" instead of "/VERYSILENT" so we supplement it with "/VERYSILENT"
                 result =
                     [
-                        new IAtodOperation.UninstallUsingRegistryUninstallString("{09786633-20A6-48F4-932B-3AF58F730AD0}_is1", new string[] { "/NORESTART /VERYSILENT" }, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{09786633-20A6-48F4-932B-3AF58F730AD0}_is1", new string[] { "/VERYSILENT /NORESTART" }, null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.SofType:
