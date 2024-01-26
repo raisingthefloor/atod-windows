@@ -50,6 +50,7 @@ internal struct KnownApplication
         FreeVirtualKeyboard,
         Fusion,
         Jaws,
+        Kurzweil3000,
         Magic,
         Nvda,
         PurpleP3,
@@ -79,6 +80,7 @@ internal struct KnownApplication
     public static readonly KnownApplication FREE_VIRTUAL_KEYBOARD = new() { Id = IdValue.FreeVirtualKeyboard };
     public static readonly KnownApplication FUSION = new() { Id = IdValue.Fusion };
     public static readonly KnownApplication JAWS = new() { Id = IdValue.Jaws };
+    public static readonly KnownApplication KURZWEIL_3000 = new() { Id = IdValue.Kurzweil3000 };
     public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
     public static readonly KnownApplication PURPLE_P3 = new() { Id = IdValue.PurpleP3 };
@@ -125,6 +127,8 @@ internal struct KnownApplication
                 return KnownApplication.FUSION;
             case "jaws":
                 return KnownApplication.JAWS;
+            case "kurzweil3000":
+                return KnownApplication.KURZWEIL_3000;
             case "magic":
                 return KnownApplication.MAGIC;
             case "nvda":
@@ -451,6 +455,27 @@ internal struct KnownApplication
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "JAWS setup package.exe", "/Type silent", [], null, true),
                     ];
                 break;
+            case IdValue.Kurzweil3000:
+                result =
+                    [
+                        // NOTE: in v22, the "weblicense" ZIP is identical to the "standard" license ZIP except for the setup.exe file (which we don't use); the MSI file takes the type of license as a parameter
+                        this.GetInstallDownloadOperation(),
+                        new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "K3000_k3_2210_W_WebLicense.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                        // NOTE: we should auto-detect if .NET 8 is already installed (and skip it otherwise); this should not technically be necessary on the versions of Windows 10/11 (i.e. beyond 1903+) that AToD supports
+                        // see: https://learn.microsoft.com/en-us/dotnet/framework/migration-guide/how-to-determine-which-versions-are-installed
+                        //new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "Software\\ISSetupPrerequisites\\{2040DEBA-E3A0-4A5A-824B-9A36E43EB33B}\\ndp48-x86-x64-allos-enu.exe", "/quiet /AcceptEULA /norestart", [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                        //new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "Software\\ISSetupPrerequisites\\{2040DEBA-E3A0-4A5A-824B-9A36E43EB33B}\\ndp48-x86-x64-allos-enu.exe", "/quiet /norestart", [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                        // NOTE: we may want to detect if this package is already installed (and skip it otherwise)
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "Software\\ISSetupPrerequisites\\{957E6AC2-3CE2-4802-B460-2CAFFC93DB6A}\\vcredist_x86.exe", "/install /quiet /norestart", [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                        // NOTE: we may want to detect if this package is already installed (and skip it otherwise)
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "Software\\ISSetupPrerequisites\\{73BD27F1-D526-43DB-8108-95B74D9299B9}\\VC_redist.x86.exe", "/install /quiet /norestart", [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                        // NOTE: we may want to detect if this package is already installed (and skip it otherwise)
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "Software\\ISSetupPrerequisites\\{B88FD2D7-C8D4-4019-95CF-A011FE2096E6}\\VC_redist.x64.exe", "/install /quiet /norestart", [], STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Software\\Kurzweil 3000 v.22.msi", new() { { "AUTO", "1" }, { "EDITION", "\"web\"" }, { "AUTOUPDATE", "0" }  }, RequiresElevation: true),
+                        // NOTE: if the user needed to install the standalone-license verison, we would pass "standalone" as the EDITION parameter instead of "web"
+                        //new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Software\\Kurzweil 3000 v.22.msi", new() { { "AUTO", "1" }, { "EDITION", "\"standalone\"" }, { "AUTOUPDATE", "0" } }, RequiresElevation: true),
+                    ];
+                break;
             case IdValue.Magic:
                 result =
                     [
@@ -715,6 +740,12 @@ internal struct KnownApplication
                 CdnRelativePath: "jaws/J2024.2312.53.400-any.zip",
                 Filename: "J2024.2312.53.400-any.zip",
                 Checksum: new IAtodChecksum.Sha256([115, 195, 31, 0, 11, 117, 21, 119, 17, 70, 116, 82, 47, 92, 62, 240, 26, 212, 231, 161, 105, 164, 176, 53, 98, 114, 204, 18, 152, 189, 126, 199])
+                ),
+            IdValue.Kurzweil3000 => (
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/kurzweil3000/K3000_k3_2210_W_WebLicense.zip"),
+                CdnRelativePath: "kurzweil3000/K3000_k3_2210_W_WebLicense.zip",
+                Filename: "K3000_k3_2210_W_WebLicense.zip",
+                Checksum: new IAtodChecksum.Sha256([233, 155, 244, 12, 19, 98, 146, 91, 16, 156, 0, 1, 3, 80, 241, 250, 147, 59, 234, 88, 203, 73, 1, 146, 116, 213, 126, 85, 121, 16, 18, 39])
                 ),
             IdValue.Magic => (
                 // Intel 64-bit
@@ -1009,6 +1040,12 @@ internal struct KnownApplication
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_JAWS_START, null, RequiresElevation: true),
                         // NOTE: although this is not documented in the sample uninstall scripts from Freedom Scientific, we must run "JAWS setup package.exe" with "/uninstall /quiet" as arguments (i.e. the QuietUninstallString of "Freedom Scientific JAWS 2024")
                         new IAtodOperation.UninstallUsingRegistryUninstallString("{7a98cb34-9d9b-47e0-918b-d3d528ef75b7}", null, null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.Kurzweil3000:
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.KURZWEIL_3000, null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.Magic:
