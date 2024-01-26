@@ -59,6 +59,7 @@ internal struct KnownApplication
         SofType,
         SuperNovaMagnifier,
         SuperNovaMagnifierAndSpeech,
+        WordQ,
         ZoomText,
     }
 
@@ -89,6 +90,7 @@ internal struct KnownApplication
     public static readonly KnownApplication SOFTYPE = new() { Id = IdValue.SofType };
     public static readonly KnownApplication SUPERNOVA_MAGNIFIER = new() { Id = IdValue.SuperNovaMagnifier };
     public static readonly KnownApplication SUPERNOVA_MAGNIFIER_AND_SPEECH = new() { Id = IdValue.SuperNovaMagnifierAndSpeech };
+    public static readonly KnownApplication WORDQ = new() { Id = IdValue.WordQ };
     public static readonly KnownApplication ZOOMTEXT = new() { Id = IdValue.ZoomText };
 
     public static KnownApplication? TryFromProductName(string applicationName)
@@ -145,6 +147,8 @@ internal struct KnownApplication
                 return KnownApplication.SUPERNOVA_MAGNIFIER;
             case "supernovamagnifierandspeech":
                 return KnownApplication.SUPERNOVA_MAGNIFIER_AND_SPEECH;
+            case "wordq":
+                return KnownApplication.WORDQ;
             case "zoomtext":
                 return KnownApplication.ZOOMTEXT;
             default:
@@ -583,6 +587,18 @@ internal struct KnownApplication
                         // NOTE: the network installation instructions say to ensure that the system is restarted following installation
                     ];
                 break;
+            case IdValue.WordQ:
+                result =
+                [
+                    this.GetInstallDownloadOperation(),
+                    new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "WordQ5S_NA_EN.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "AcapelaCore\\Acapela Text to Speech for WordQ 5 (Core).msi", null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "AcapelaNA\\Acapela Text to Speech for WordQ 5(North America).msi", null, RequiresElevation: true),
+//                    // NOTE: installing we could also run NA_Std_EN_wdqsetup.exe instead, but using the MSI directly is preferred
+//                    new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "WordQ\\NA_Std_EN_wdqsetup.exe", "/S /v/qn", [], null, RequiresElevation: true),
+                    new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "WordQ\\WordQ 5.msi", null, RequiresElevation: true),
+                ];
+                break;
             case IdValue.ZoomText:
                 result =
                     [
@@ -803,6 +819,13 @@ internal struct KnownApplication
                 CdnRelativePath: "supernovamagnifierandspeech/SuperNova_Magnifier_&_Speech_22.04_English_(United_States)_NETWORK.zip",
                 Filename: "SuperNova_Magnifier_&_Speech_22.04_English_(United_States)_NETWORK.zip",
                 Checksum: new IAtodChecksum.Sha256([177, 168, 203, 125, 224, 250, 32, 161, 89, 193, 190, 62, 99, 104, 24, 41, 159, 73, 240, 102, 41, 211, 31, 89, 190, 117, 81, 139, 179, 211, 102, 148])
+                ),
+            IdValue.WordQ => (
+                //DirectDownloadUri: new Uri("https://downloads.quillsoft.ca/30days/WordQ5S_NA_EN.zip"), // NOTE: no zip file exists at this location today; only a file with the same name (but an .exe extension) exists, and it is a WinZip self-extracting ZIP file
+                DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/wordq/WordQ5S_NA_EN.zip"),
+                CdnRelativePath: "wordq/WordQ5S_NA_EN.zip",
+                Filename: "WordQ5S_NA_EN.zip",
+                Checksum: new IAtodChecksum.Sha256([128, 129, 60, 178, 7, 32, 213, 225, 91, 158, 14, 85, 97, 185, 161, 14, 47, 70, 140, 48, 101, 45, 115, 189, 170, 142, 160, 31, 171, 229, 185, 132])
                 ),
             IdValue.ZoomText => (
                 DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/zoomtext/ZT2024.2312.26.400.zip"),
@@ -1107,6 +1130,14 @@ internal struct KnownApplication
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DOLPHIN_SAM_VOCALIZER_EXPRESSIVE_VOCALIZER_EXPRESSIVE_COMMON_FILES, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DOLPHIN_SAM_64_BIT_ADDON, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.DOLPHIN_SAM, null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.WordQ:
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.QUILLSOFT_WORDQ_5, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.QUILLSOFT_ACAPELA_TTS_FOR_WORDQ_5_CORE, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.QUILLSOFT_ACAPELA_TTS_FOR_WORDQ_5_NORTH_AMERICA, null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.ZoomText:
