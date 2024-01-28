@@ -338,6 +338,8 @@ public class Program
         };
         progressBar.Show();
         //
+        // NOTE: if we ever create the ability to download multiple files in parallel, we should create all temporary download folders up front (instead of creating them when we encounter the download operation);
+        //       otherwise we could end with a download operation starting and trying to use an existing path which hadn't already been created
         for (var iOperation = 0; iOperation < atodOperationCount; iOperation += 1)
         {
             var atodOperation = atodOperations[iOperation];
@@ -455,6 +457,8 @@ public class Program
                         switch (operationDestinationPath!.Value)
                         {
                             case AtodPath.Values.CreateTemporaryFolderForNewPathKey:
+                                // NOTE: if we ever create the ability to download multiple files in parallel, we should create all temporary download folders up front (instead of creating them when we encounter the download operation);
+                                //       otherwise we could end with a download operation starting and trying to use an existing path which hadn't already been created
                                 var temporaryFolderKey = operationDestinationPath.Key!.ToLowerInvariant();
                                 try
                                 {
@@ -472,6 +476,18 @@ public class Program
                                     //
                                     return (int)ExitCode.FileNotFound;
                                 }
+                                break;
+                            case AtodPath.Values.ExistingPathKey:
+                                string? existingPath;
+                                var existingPathExists = atodAbsolutePathsWithLowercaseKeys.TryGetValue(operationDestinationPath.Key!.ToLowerInvariant(), out existingPath);
+                                if (existingPathExists == false)
+                                {
+                                    Console.WriteLine("Destination path for download not found; this probably indicates a bug (i.e. a previous download should have created the folder).");
+                                    Console.WriteLine();
+                                    //
+                                    return (int)ExitCode.FileNotFound;
+                                }
+                                destinationFullPath = Path.Combine(existingPath!, operationFilename);
                                 break;
                             default:
                                 throw new Exception("unsupported choice");
