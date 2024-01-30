@@ -20,6 +20,12 @@ using System.Collections.Generic;
 
 namespace Atod;
 
+public interface ISupplementalArgument
+{
+    public record PostfixArgument(string Arg) : ISupplementalArgument;
+    public record PrefixArgument(string Arg) : ISupplementalArgument;
+}
+
 public interface IAtodOperation
 {
     public record CalculateChecksum(AtodPath SourcePath, string Filename, AtodChecksumAlgorithm ChecksumAlgorithm) : IAtodOperation;
@@ -27,7 +33,7 @@ public interface IAtodOperation
     public record Download(Uri Uri, AtodPath DestinationPath, string Filename, IAtodChecksum? Checksum) : IAtodOperation;
     public record InstallExe(AtodPath SourcePath, string Filename, string? CommandLineArgs, List<IAtodOperationCondition> Conditions, int? RebootRequiredExitCode, bool RequiresElevation) : IAtodOperation;
     public record InstallMsi(AtodPath SourcePath, string Filename, Dictionary<string, string>? PropertySettings, bool RequiresElevation) : IAtodOperation;
-    public record UninstallUsingRegistryUninstallString(string UninstallSubKeyName, string[]? OptionalSupplementalArgs, int? RebootRequiredExitCode, bool RequiresElevation) : IAtodOperation;
+    public record UninstallUsingRegistryUninstallString(string UninstallSubKeyName, ISupplementalArgument[]? OptionalSupplementalArgs, int? RebootRequiredExitCode, bool RequiresElevation) : IAtodOperation;
     public record UninstallUsingWindowsInstaller(Guid WindowsInstallerProductCode, Dictionary<string, string>? PropertySettings, bool RequiresElevation) : IAtodOperation;
     public record Unzip(AtodPath SourcePath, string Filename, AtodPath DestinationPath) : IAtodOperation;
     public record VerifyChecksum(AtodPath SourcePath, string Filename, IAtodChecksum Checksum) : IAtodOperation;

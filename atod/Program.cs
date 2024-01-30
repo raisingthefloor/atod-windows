@@ -1305,7 +1305,7 @@ public class Program
         System.IO.FileStream fileStream;
         try
         {
-            fileStream = System.IO.File.Open(path, FileMode.Open, FileAccess.Read);
+            fileStream = System.IO.File.Open(path, FileMode.Open, System.IO.FileAccess.Read);
         }
         catch
         {
@@ -1346,19 +1346,23 @@ public class Program
         return MorphicResult.OkResult(result);
     }
 
+    // NOTE: this is an early implementation of this functionality; additional trappings for unallowed characters (such as colons) may be appropriate
+    // NOTE: because Windows allows the command-line to contain spaces in folders without requiring double-quotes, we must check for the existance of an application to be sure we are
+    //       capturing the filename correctly (e.g. "c:\application arg1" vs "c:\application arg1 -s" where "application arg1.exe" could be a filename
+
     private static MorphicResult<(string Filename, string Args), MorphicUnit> SplitUninstallStringIntoFilenameAndArgs(string uninstallString)
     {
-        // in our initial implementation, we simply separate out the args after the first space character; if the filename is enclosed in double-quotes then we terminate it at its closing quotation marks
-        
+        string filename;
+        string args;
+        (string Filename, string Args) result;
+
         var mutableUninstallString = uninstallString.TrimStart();
         if (mutableUninstallString.Length == 0)
         {
             return MorphicResult.OkResult(("", ""));
         }
 
-        string filename;
-        string args;
-
+        // if the filename is enclosed in quotes, split along those lines now
         if (mutableUninstallString[0] == '"')
         {
             // filename is enclosed in double quotes
@@ -1374,55 +1378,130 @@ public class Program
                 filename = mutableUninstallString.Substring(1);
                 args = "";
             }
+
+            args = args.TrimStart();
+
+            result = (filename, args);
+            return MorphicResult.OkResult(result);
         }
-        else
+
+        // if the filename was not enclosed in quotes, search the file path to find the application
+        int indexOfBackslash;
+        StringBuilder filenameStringBuilder = new();
+        while (true)
         {
-            var indexOfBackslash = mutableUninstallString.IndexOf('\\');
-            var indexOfSpace = mutableUninstallString.IndexOf(' ');
-            if (indexOfBackslash >= 0)
+            indexOfBackslash = mutableUninstallString.IndexOf('\\');
+            if (indexOfBackslash > 0)
             {
-                // NOTE: if the filename has backslashes in it but is not enclosed in double-quotes, then we assume the full string is the filename; if this causes us problems, then we could evaluate a strategy such as manually parsing the path and looking for folders and files with its name
-                filename = mutableUninstallString;
-                args = "";
+                string testPath = filenameStringBuilder.ToString() + mutableUninstallString.Substring(0, indexOfBackslash + 1);
+                if (System.IO.Directory.Exists(testPath) == true)
+                {
+                    filenameStringBuilder.Append(mutableUninstallString.Substring(0, indexOfBackslash + 1));
+                    mutableUninstallString = mutableUninstallString.Substring(indexOfBackslash + 1);
+                    // we have found more of the path; continue trying to find the path
+                    continue;
+                }
+
+                // if the path could not be continued to the next backslash, try to parse at the next space (or end of string) instead
+                var indexOfSpaceOrEol = mutableUninstallString.IndexOf(' ');
+                if ((indexOfSpaceOrEol > indexOfBackslash) || (indexOfSpaceOrEol < 0))
+                {
+                    indexOfSpaceOrEol = mutableUninstallString.Length;
+                }
+                testPath = filenameStringBuilder.ToString() + mutableUninstallString.Substring(0, indexOfSpaceOrEol);
+                if (System.IO.File.Exists(testPath) == true)
+                {
+                    filenameStringBuilder.Append(mutableUninstallString.Substring(0, indexOfSpaceOrEol));
+                    mutableUninstallString = mutableUninstallString.Substring(indexOfSpaceOrEol);
+                    // we have found the complete path
+                    break;
+                }
             }
-            else if (indexOfSpace < 0)
+            else if (indexOfBackslash == 0)
             {
-                // no spaces; this must be a filename
-                filename = mutableUninstallString;
-                args = "";
+                // if the backslash is the first character, the filename is not valid
+                return MorphicResult.ErrorResult();
             }
             else
             {
-                // spaces in string; separate the filename and args by the index of that space
-                filename = mutableUninstallString.Substring(0, indexOfSpace);
-                args = mutableUninstallString.Substring(indexOfSpace + 1);
+                // if no additional backslash was found, try to find the next space or the eol instead
+                var indexOfSpaceOrEol = mutableUninstallString.IndexOf(' ');
+                if (indexOfSpaceOrEol < 0)
+                {
+                    indexOfSpaceOrEol = mutableUninstallString.Length;
+                }
+                string testPath = filenameStringBuilder.ToString() + mutableUninstallString.Substring(0, indexOfSpaceOrEol);
+                if (System.IO.File.Exists(testPath) == true)
+                {
+                    filenameStringBuilder.Append(mutableUninstallString.Substring(0, indexOfSpaceOrEol));
+                    mutableUninstallString = mutableUninstallString.Substring(indexOfSpaceOrEol);
+                    // we have found the complete path
+                    break;
+                }
+                else
+                {
+                    // we could not find a valid path
+                    return MorphicResult.ErrorResult();
+                }
             }
         }
 
-        // trim any left-most whitespace from args
+        filename = filenameStringBuilder.ToString();
+        args = mutableUninstallString;
+
         args = args.TrimStart();
 
-        var result = (filename, args);
+        result = (filename, args);
         return MorphicResult.OkResult(result);
     }
 
-    private static string AddSupplementalArgs(string args, string[] supplementalArgs)
+    private static string AddSupplementalArgs(string existingArgs, ISupplementalArgument[] supplementalArgs)
     {
-        var result = args;
+        var prefixArgs = "";
+        var postfixArgs = "";
         
         // split our current args into a list
-        var existingArgs = Program.SplitArgsStringIntoList(args);
+        var existingArgsList = Program.SplitArgsStringIntoList(existingArgs);
 
         foreach (var supplementalArg in supplementalArgs)
         {
-            // NOTE: we are doing a case-sensitive compare
-            if (args.Contains(supplementalArg) == false)
+            switch (supplementalArg)
             {
-                result += " " + supplementalArg;
+                case ISupplementalArgument.PostfixArgument { Arg: string arg }:
+                    // NOTE: we are doing a case-sensitive compare
+                    if (existingArgsList.Contains(arg) == false)
+                    {
+                        postfixArgs += " " + arg;
+                    }
+                    break;
+                case ISupplementalArgument.PrefixArgument { Arg: string arg }:
+                    // NOTE: we are doing a case-sensitive compare
+                    if (existingArgsList.Contains(arg) == false)
+                    {
+                        prefixArgs += arg + " ";
+                    }
+                    break;
             }
         }
 
+        string result = "";
+
+        prefixArgs = prefixArgs.TrimEnd();
+        result = prefixArgs;
+        //
+        if (existingArgs.Length > 0)
+        {
+            result += " " + existingArgs;
+        }
         result = result.TrimStart();
+        //
+        postfixArgs = postfixArgs.TrimStart();
+        if (postfixArgs.Length > 0)
+        {
+            result += " " + postfixArgs;
+        }
+        result = result.TrimStart();
+
         return result;
     }
 

@@ -51,6 +51,7 @@ internal struct KnownApplication
         Fusion,
         Ghotit,
         Grid3,
+        Inspiration,
         Jaws,
         Kurzweil1000,
         Kurzweil3000,
@@ -85,6 +86,7 @@ internal struct KnownApplication
     public static readonly KnownApplication FUSION = new() { Id = IdValue.Fusion };
     public static readonly KnownApplication GHOTIT = new() { Id = IdValue.Ghotit };
     public static readonly KnownApplication GRID3 = new() { Id = IdValue.Grid3 };
+    public static readonly KnownApplication INSPIRATION = new() { Id = IdValue.Inspiration };
     public static readonly KnownApplication JAWS = new() { Id = IdValue.Jaws };
     public static readonly KnownApplication KURZWEIL_1000 = new() { Id = IdValue.Kurzweil1000 };
     public static readonly KnownApplication KURZWEIL_3000 = new() { Id = IdValue.Kurzweil3000 };
@@ -137,6 +139,8 @@ internal struct KnownApplication
                 return KnownApplication.GHOTIT;
             case "grid3":
                 return KnownApplication.GRID3;
+            case "inspiration":
+                return KnownApplication.INSPIRATION;
             case "jaws":
                 return KnownApplication.JAWS;
             case "kurzweil1000":
@@ -410,6 +414,18 @@ internal struct KnownApplication
                         new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "US Voices.zip", AtodPath.CreateTemporaryFolderForNewPathKey("usvoicesfolder")),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("usvoicesfolder"), "Grid 3 English (United States).Ryan - American English Male Adult.msi", null, RequiresElevation: true),
                         new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("usvoicesfolder"), "Grid 3 English (United States).Heather - American English Female Adult.msi", null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.Inspiration:
+                installOperations =
+                    [
+                        //// enterprise-style install (preliminary and probably incomplete)
+                        //new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "Inspiration+10+msi.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                        //new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "Inspiration 10 msi\\Inspiration 10.msi", null, RequiresElevation: true),
+                        //
+                        // TEMPORARY UNOFFICIAL TEST -- NOT FOR WIDE RELEASE
+                        new IAtodOperation.Unzip(AtodPath.ExistingPathKey("downloadfolder"), "insp10_ESD.zip", AtodPath.CreateTemporaryFolderForNewPathKey("setupfolder")),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("setupfolder"), "setup.exe", "-p network.ini", [], null, true),
                     ];
                 break;
             case IdValue.Jaws:
@@ -853,6 +869,22 @@ internal struct KnownApplication
                     Filename: "windowsdesktop-runtime-7.0.9-win-x86.exe",
                     OptionalChecksum: new IAtodChecksum.Sha256([220, 87, 138, 3, 92, 45, 68, 110, 163, 41, 255, 130, 11, 120, 112, 190, 20, 28, 10, 98, 1, 243, 204, 115, 208, 99, 33, 106, 186, 47, 67, 24])
                 )],
+            IdValue.Inspiration =>
+                //// enterprise-style install (preliminary and probably incomplete)
+                //[(
+                //    DirectDownloadUri: new Uri("https://inspiration10installers.s3-eu-west-1.amazonaws.com/Inspiration+10+msi.zip"),
+                //    CdnRelativePath: "inspiration/Inspiration+10+msi.zip",
+                //    Filename: "Inspiration+10+msi.zip",
+                //    OptionalChecksum: new IAtodChecksum.Sha256([105, 238, 162, 228, 2, 22, 104, 184, 217, 57, 182, 10, 202, 236, 99, 12, 223, 211, 161, 95, 31, 241, 73, 215, 84, 25, 188, 32, 251, 136, 211, 190])
+                //)],
+                //
+                // TEMPORARY UNOFFICIAL TEST -- NOT FOR WIDE RELEASE
+                [(
+                    DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/inspiration/insp10_ESD.zip"),
+                    CdnRelativePath: "inspiration/insp10_ESD.zip",
+                    Filename: "insp10_ESD.zip",
+                    OptionalChecksum: new IAtodChecksum.Sha256([221, 64, 18, 174, 128, 119, 237, 152, 101, 202, 151, 161, 27, 185, 77, 237, 220, 141, 120, 3, 211, 145, 210, 113, 43, 213, 207, 186, 51, 117, 31, 164])
+                )],
             IdValue.Jaws =>
                 [(
                     DirectDownloadUri: new Uri("https://atod-cdn.raisingthefloor.org/jaws/J2024.2312.53.400-any.zip"),
@@ -970,7 +1002,7 @@ internal struct KnownApplication
                 // NOTE: AutoHotkey has a "QuietUninstallString" registry entry, so we don't need to pass in "/silent" as a flag
                 result =
                     [
-//                        new IAtodOperation.UninstallUsingRegistryUninstallString("AutoHotkey", new string[] { "/silent" }, null, RequiresElevation: true),
+//                        new IAtodOperation.UninstallUsingRegistryUninstallString("AutoHotkey", [ new ISupplementalArgument.PostfixArgument("/silent") ], null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingRegistryUninstallString("AutoHotkey", null, null, RequiresElevation: true),
                     ];
                 break;
@@ -987,7 +1019,7 @@ internal struct KnownApplication
                 // NOTE: CameraMouse has a "QuietUninstallString" registry entry, but it uses "/SILENT" instead of "/VERYSILENT" so we supplement it with "/VERYSILENT"
                 result =
                     [
-                        new IAtodOperation.UninstallUsingRegistryUninstallString("{F5E6727D-0969-4C4A-A669-71F1A3913A03}}_is1", new string[] { "/VERYSILENT" }, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{F5E6727D-0969-4C4A-A669-71F1A3913A03}}_is1", [ new ISupplementalArgument.PostfixArgument("/VERYSILENT") ], null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.ClaroRead:
@@ -1017,7 +1049,7 @@ internal struct KnownApplication
                 // NOTE: ComfortOsk has a "QuietUninstallString" registry entry, but it uses "/SILENT" instead of "/VERYSILENT" so we supplement it with "/VERYSILENT"
                 result =
                     [
-                        new IAtodOperation.UninstallUsingRegistryUninstallString("{6EB17721-6249-417B-99B9-DAF3FD532955}_is1", new string[] { "/VERYSILENT /NORESTART" }, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{6EB17721-6249-417B-99B9-DAF3FD532955}_is1", [ new ISupplementalArgument.PostfixArgument("/VERYSILENT /NORESTART") ], null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.Communicator5:
@@ -1074,7 +1106,7 @@ internal struct KnownApplication
                 // NOTE: the uninstaller is not indicating that the system should be restarted (using an exit code); the exit code is zero.
                 result =
                     [
-                        new IAtodOperation.UninstallUsingRegistryUninstallString("{CA4F9519-1A83-4907-8651-F17073A0E1CE}_is1", new string[] { "/VERYSILENT /NORESTART" }, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{CA4F9519-1A83-4907-8651-F17073A0E1CE}_is1", [ new ISupplementalArgument.PostfixArgument("/VERYSILENT /NORESTART") ], null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.Fusion:
@@ -1162,6 +1194,18 @@ internal struct KnownApplication
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.SENSORY_SOFTWARE_HEATHER_AMERICAN_ENGLISH_FEMALE_ADULT, null, RequiresElevation: true),
                     ];
                 break;
+            case IdValue.Inspiration:
+                result =
+                    [
+                        //// enterprise-style uninstall (preliminary and probably incomplete)
+                        //new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.TECHEDOLOGY_INSTALLER_FOR_INSPIRATION_10_DEPLOYMENT, null, RequiresElevation: true),
+                        //
+                        // TEMPORARY UNOFFICIAL TEST -- NOT FOR WIDE RELEASE
+                        // NOTE: we would need to add the "/S" argument in the uninstallstring between the uninstall application name and the args (i.e. as the first argument), with a space after it if the pre-existing arguments were not an empty string
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("Inspiration 9", [ new ISupplementalArgument.PrefixArgument("/S") ], null, RequiresElevation: true),
+                    ];
+                //result = null;
+                break;
             case IdValue.Jaws:
                 result =
                     [
@@ -1215,8 +1259,8 @@ internal struct KnownApplication
             case IdValue.Magic:
                 result =
                     [
-                        new IAtodOperation.UninstallUsingRegistryUninstallString("MAGic15.0", new string[] { "/type silent" }, null, RequiresElevation: true),
-                        new IAtodOperation.UninstallUsingRegistryUninstallString("FSReader3.0", new string[] { "/type silent" }, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("MAGic15.0", [ new ISupplementalArgument.PostfixArgument("/type silent") ], null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("FSReader3.0", [ new ISupplementalArgument.PostfixArgument("/type silent") ], null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_MAGIC_EXTERNAL_VIDEO_INTERFACE, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_MAGIC_TRAINING_TABLE_OF_CONTENTS_DAISY_FILES, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_TALKING_INSTALLER_18_0, null, RequiresElevation: true),
@@ -1227,13 +1271,13 @@ internal struct KnownApplication
                 // NOTE: NVDA does not include the "/S" option (for Nullsoft "SILENT") in their UninstallString, so we force-add it as a parameter; this is fragile, and it should be removed if a QuietUninstallString is present, etc.
                 result =
                     [
-                        new IAtodOperation.UninstallUsingRegistryUninstallString("NVDA", new string[] { "/S" }, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("NVDA", [ new ISupplementalArgument.PostfixArgument("/S") ], null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.PurpleP3:
                 result =
                     [
-                        //new IAtodOperation.UninstallUsingRegistryUninstallString("Purple P3 9.6.1-3513", new string[] { "--mode unattended" }, null, RequiresElevation: true),
+                        //new IAtodOperation.UninstallUsingRegistryUninstallString("Purple P3 9.6.1-3513", [ new ISupplementalArgument.PostfixArgument("--mode unattended") ], null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.PURPLE_P3, new() { { "WRAPPED_ARGUMENTS", "\"--mode unattended\"" } }, RequiresElevation: true),
                     ];
                 break;
@@ -1247,7 +1291,7 @@ internal struct KnownApplication
                 // NOTE: SmyleMouse has a "QuietUninstallString" registry entry, but it uses "/SILENT" instead of "/VERYSILENT" so we supplement it with "/VERYSILENT"
                 result =
                     [
-                        new IAtodOperation.UninstallUsingRegistryUninstallString("{09786633-20A6-48F4-932B-3AF58F730AD0}_is1", new string[] { "/VERYSILENT /NORESTART" }, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{09786633-20A6-48F4-932B-3AF58F730AD0}_is1", [ new ISupplementalArgument.PostfixArgument("/VERYSILENT /NORESTART") ], null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.SofType:
