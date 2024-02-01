@@ -34,6 +34,7 @@ internal struct KnownApplication
 
     public enum IdValue
     {
+        AudioNotetaker,
         AutoHotkey,
         BuildABoard,
         CameraMouse,
@@ -56,6 +57,7 @@ internal struct KnownApplication
         Kurzweil1000,
         Kurzweil3000,
         Magic,
+        NaturalReader,
         Nvda,
         PurpleP3,
         ReadAndWrite,
@@ -69,6 +71,7 @@ internal struct KnownApplication
 
     public readonly KnownApplication.IdValue Id { get; init; }
 
+    public static readonly KnownApplication AUDIO_NOTETAKER = new() { Id = IdValue.AudioNotetaker };
     public static readonly KnownApplication AUTOHOTKEY = new() {  Id = IdValue.AutoHotkey };
     public static readonly KnownApplication BUILD_A_BOARD = new() { Id = IdValue.BuildABoard };
     public static readonly KnownApplication CAMERA_MOUSE = new() { Id = IdValue.CameraMouse };
@@ -90,7 +93,8 @@ internal struct KnownApplication
     public static readonly KnownApplication JAWS = new() { Id = IdValue.Jaws };
     public static readonly KnownApplication KURZWEIL_1000 = new() { Id = IdValue.Kurzweil1000 };
     public static readonly KnownApplication KURZWEIL_3000 = new() { Id = IdValue.Kurzweil3000 };
-    public static readonly KnownApplication MAGIC = new() {  Id = IdValue.Magic };
+    public static readonly KnownApplication MAGIC = new() { Id = IdValue.Magic };
+    public static readonly KnownApplication NATURAL_READER = new() { Id = IdValue.NaturalReader };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
     public static readonly KnownApplication PURPLE_P3 = new() { Id = IdValue.PurpleP3 };
     public static readonly KnownApplication READ_AND_WRITE = new() { Id = IdValue.ReadAndWrite };
@@ -105,6 +109,8 @@ internal struct KnownApplication
     {
         switch (applicationName.ToLowerInvariant())
         {
+            case "audionotetaker":
+                return KnownApplication.AUDIO_NOTETAKER;
             case "autohotkey":
                 return KnownApplication.AUTOHOTKEY;
             case "buildaboard":
@@ -149,6 +155,8 @@ internal struct KnownApplication
                 return KnownApplication.KURZWEIL_3000;
             case "magic":
                 return KnownApplication.MAGIC;
+            case "naturalreader":
+                return KnownApplication.NATURAL_READER;
             case "nvda":
                 return KnownApplication.NVDA;
             case "purplep3":
@@ -183,6 +191,12 @@ internal struct KnownApplication
         List<IAtodOperation> installOperations;
         switch (this.Id)
         {
+            case IdValue.AudioNotetaker:
+                installOperations =
+                    [
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "SonocentAudioNotetaker_Win_5.3.29.0.exe", "/install /quiet /norestart", [], null, true),
+                    ];
+                break;
             case IdValue.AutoHotkey:
                 installOperations =
                     [
@@ -535,6 +549,12 @@ internal struct KnownApplication
                         //new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "M15.0.2014.400-enu-x86.exe", "/type silent", STANDARD_REBOOT_REQUIRED_EXIT_CODE, true),
                     ];
                 break;
+            case IdValue.NaturalReader:
+                installOperations =
+                    [
+                        new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("downloadfolder"), "naturalreader16.msi", null, RequiresElevation: true),
+                    ];
+                break;
             case IdValue.Nvda:
                 installOperations =
                     [
@@ -730,6 +750,13 @@ internal struct KnownApplication
     {
         return this.Id switch
         {
+            IdValue.AudioNotetaker =>
+                [(
+                    DirectDownloadUri: new Uri("https://downloads.sonocent.com/AudioNote/Windows/SonocentAudioNotetaker_Win_5.3.29.0.exe"),
+                    CdnRelativePath: "audionotetaker/SonocentAudioNotetaker_Win_5.3.29.0.exe",
+                    Filename: "SonocentAudioNotetaker_Win_5.3.29.0.exe",
+                    OptionalChecksum: new IAtodChecksum.Sha256([119, 160, 114, 146, 142, 159, 151, 119, 150, 161, 148, 137, 41, 174, 198, 168, 160, 21, 212, 107, 10, 113, 166, 62, 206, 185, 227, 3, 3, 94, 134, 60])
+                )],
             IdValue.AutoHotkey => 
                 [(
                     // NOTE: we had problems with the AutoHotkey CDN returning HTTP 403 in testing; for now, we're using the AToD CDN instead
@@ -917,6 +944,13 @@ internal struct KnownApplication
                     Filename: "M15.0.2014.400-enu-x64.exe",
                     OptionalChecksum: new IAtodChecksum.Sha256([117, 43, 40, 31, 213, 216, 116, 36, 163, 80, 21, 225, 236, 198, 3, 98, 216, 80, 190, 74, 152, 147, 124, 179, 180, 103, 218, 218, 33, 248, 175, 208])
                 )],
+            IdValue.NaturalReader =>
+                [(
+                    DirectDownloadUri: new Uri("https://wwwnaturalreaderscom.s3.amazonaws.com/software/naturalreader16.msi"),
+                    CdnRelativePath: "naturalreader/naturalreader16.msi",
+                    Filename: "naturalreader16.msi",
+                    OptionalChecksum: new IAtodChecksum.Sha256([29, 211, 243, 223, 32, 180, 17, 179, 184, 63, 171, 137, 56, 20, 49, 222, 91, 135, 29, 228, 52, 242, 201, 176, 218, 75, 198, 83, 106, 142, 149, 210])
+                )],
             IdValue.Nvda =>
                 [(
                     DirectDownloadUri: new Uri("https://www.nvaccess.org/download/nvda/releases/2023.3.1/nvda_2023.3.1.exe"),
@@ -998,6 +1032,14 @@ internal struct KnownApplication
 
         switch (this.Id)
         {
+            case IdValue.AudioNotetaker:
+                // NOTE: Sonocent Audio Notetaker has a "QuietUninstallString" registry entry, so we don't need to pass in "/quiet" as a flag
+                result =
+                    [
+//                        new IAtodOperation.UninstallUsingRegistryUninstallString("{0e463382-de6d-4db1-bce4-b96d7c5f12f1}", [ new ISupplementalArgument.PostfixArgument("/quiet") ], null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("{0e463382-de6d-4db1-bce4-b96d7c5f12f1}", null, null, RequiresElevation: true),
+                    ];
+                break;
             case IdValue.AutoHotkey:
                 // NOTE: AutoHotkey has a "QuietUninstallString" registry entry, so we don't need to pass in "/silent" as a flag
                 result =
@@ -1265,6 +1307,12 @@ internal struct KnownApplication
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_MAGIC_TRAINING_TABLE_OF_CONTENTS_DAISY_FILES, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_TALKING_INSTALLER_18_0, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_VIDEO_ACCESSIBILITY, null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.NaturalReader:
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.NATURAL_READER, null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.Nvda:
