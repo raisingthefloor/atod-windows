@@ -59,6 +59,7 @@ internal struct KnownApplication
         Magic,
         NaturalReader,
         Nvda,
+        OpenBook,
         PurpleP3,
         ReadAndWrite,
         SmyleMouse,
@@ -96,6 +97,7 @@ internal struct KnownApplication
     public static readonly KnownApplication MAGIC = new() { Id = IdValue.Magic };
     public static readonly KnownApplication NATURAL_READER = new() { Id = IdValue.NaturalReader };
     public static readonly KnownApplication NVDA = new() { Id = IdValue.Nvda };
+    public static readonly KnownApplication OPEN_BOOK = new() { Id = IdValue.OpenBook };
     public static readonly KnownApplication PURPLE_P3 = new() { Id = IdValue.PurpleP3 };
     public static readonly KnownApplication READ_AND_WRITE = new() { Id = IdValue.ReadAndWrite };
     public static readonly KnownApplication SMYLE_MOUSE = new() { Id = IdValue.SmyleMouse };
@@ -159,6 +161,8 @@ internal struct KnownApplication
                 return KnownApplication.NATURAL_READER;
             case "nvda":
                 return KnownApplication.NVDA;
+            case "openbook":
+                return KnownApplication.OPEN_BOOK;
             case "purplep3":
                 return KnownApplication.PURPLE_P3;
             case "readandwrite":
@@ -561,6 +565,12 @@ internal struct KnownApplication
                         new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "nvda_2023.3.1.exe", "--minimal --install-silent", [], null, true),
                     ];
                 break;
+            case IdValue.OpenBook:
+                installOperations =
+                    [
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "OPEN-BOOK  OB9.0.1768.403-enu.exe", "/type silent", [], null, true),
+                    ];
+                break;
             case IdValue.PurpleP3:
                 installOperations =
                     [
@@ -958,6 +968,13 @@ internal struct KnownApplication
                     Filename: "nvda_2023.3.1.exe",
                     OptionalChecksum: new IAtodChecksum.Sha256([181, 55, 16, 36, 104, 67, 106, 185, 62, 15, 230, 60, 247, 140, 138, 220, 84, 66, 235, 190, 208, 88, 146, 119, 212, 92, 60, 185, 196, 239, 140, 114])
                 )],
+            IdValue.OpenBook =>
+                [(
+                    DirectDownloadUri: new Uri("https://openbook9.0.vfo.digital/9017689VQUKK/OB9.0.1768.403-enu.exe"),
+                    CdnRelativePath: "openbook/OPEN-BOOK  OB9.0.1768.403-enu.exe",
+                    Filename: "OPEN-BOOK  OB9.0.1768.403-enu.exe",
+                    OptionalChecksum: new IAtodChecksum.Sha256([171, 211, 166, 180, 232, 126, 163, 78, 209, 162, 175, 102, 3, 49, 94, 33, 132, 75, 115, 155, 183, 147, 73, 13, 147, 231, 206, 235, 206, 118, 160, 220])
+                )],
             IdValue.PurpleP3 =>
                 [(
                     DirectDownloadUri: new Uri("https://s3.amazonaws.com/PurpleDownloads/P3/Purple_P3_9.6.1-3513-64b.msi"),
@@ -1320,6 +1337,31 @@ internal struct KnownApplication
                 result =
                     [
                         new IAtodOperation.UninstallUsingRegistryUninstallString("NVDA", [ new ISupplementalArgument.PostfixArgument("/S") ], null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.OpenBook:
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ELOQUENCE, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_UTILITIES, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ELEVATION, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_FINE_READER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OMNIPAGE_19, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OCR_X86, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OCR_X64_OPENBOOK_9_0, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OCR_TOMBSTONE_X86, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OCR_TOMBSTONE_X64, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_USB_CAMERA_DRIVER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_BOOK_SEARCH, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_TEXT_TO_AUDIO, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_BRAILLE, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_IMPORT_PRINTER_1, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_IMPORT_PRINTER_2, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_IMPORT_PRINTER_3, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_WOW64_PROXY_OPENBOOK_9_0, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OPEN_BOOK_9_0, null, RequiresElevation: true),
+                        // NOTE: we also run the final product uninstaller (postfixing "/type silent" to the command-line of the UninstallString)
+                        new IAtodOperation.UninstallUsingRegistryUninstallString("OB9.0", [ new ISupplementalArgument.PostfixArgument("/type silent") ], null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.PurpleP3:
