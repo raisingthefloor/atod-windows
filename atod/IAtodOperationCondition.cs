@@ -15,12 +15,11 @@
 // * Adobe Foundation
 // * Consumer Electronics Association Foundation
 
+using System.Collections.Generic;
 
 namespace Atod;
 
-public enum AtodSequenceType
+public interface IAtodOperationCondition
 {
-    CalculateChecksum,
-    Install,
-    Uninstall,
+    public record SkipOperationIfRegistryValueIsNonZeroVersion(Microsoft.Win32.RegistryKey RootKey, string SubKeyName, string ValueName) : IAtodOperationCondition;
 }
