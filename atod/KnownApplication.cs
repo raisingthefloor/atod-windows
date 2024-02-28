@@ -671,7 +671,7 @@ internal struct KnownApplication
             case IdValue.Wynn:
                 installOperations =
                     [
-                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "WYNN7.0.084-32bit-64bit", "/type Silent", [], null, true),
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "WYNN7.0.084-32bit-64bit.exe", "/type Silent", [], null, true),
                     ];
                 break;
             case IdValue.ZoomText:
