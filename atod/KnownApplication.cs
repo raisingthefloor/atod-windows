@@ -67,6 +67,7 @@ internal struct KnownApplication
         SuperNovaMagnifier,
         SuperNovaMagnifierAndSpeech,
         WordQ,
+        Wynn,
         ZoomText,
     }
 
@@ -105,6 +106,7 @@ internal struct KnownApplication
     public static readonly KnownApplication SUPERNOVA_MAGNIFIER = new() { Id = IdValue.SuperNovaMagnifier };
     public static readonly KnownApplication SUPERNOVA_MAGNIFIER_AND_SPEECH = new() { Id = IdValue.SuperNovaMagnifierAndSpeech };
     public static readonly KnownApplication WORDQ = new() { Id = IdValue.WordQ };
+    public static readonly KnownApplication WYNN = new() { Id = IdValue.Wynn };
     public static readonly KnownApplication ZOOMTEXT = new() { Id = IdValue.ZoomText };
 
     public static KnownApplication? TryFromProductName(string applicationName)
@@ -177,6 +179,8 @@ internal struct KnownApplication
                 return KnownApplication.SUPERNOVA_MAGNIFIER_AND_SPEECH;
             case "wordq":
                 return KnownApplication.WORDQ;
+            case "wynn":
+                return KnownApplication.WYNN;
             case "zoomtext":
                 return KnownApplication.ZOOMTEXT;
             default:
@@ -664,6 +668,12 @@ internal struct KnownApplication
                     new IAtodOperation.InstallMsi(AtodPath.ExistingPathKey("setupfolder"), "WordQ\\WordQ 5.msi", null, RequiresElevation: true),
                 ];
                 break;
+            case IdValue.Wynn:
+                installOperations =
+                    [
+                        new IAtodOperation.InstallExe(AtodPath.ExistingPathKey("downloadfolder"), "WYNN7.0.084-32bit-64bit", "/type Silent", [], null, true),
+                    ];
+                break;
             case IdValue.ZoomText:
                 installOperations =
                     [
@@ -1029,6 +1039,13 @@ internal struct KnownApplication
                     CdnRelativePath: "wordq/WordQ5S_NA_EN.zip",
                     Filename: "WordQ5S_NA_EN.zip",
                     OptionalChecksum: new IAtodChecksum.Sha256([128, 129, 60, 178, 7, 32, 213, 225, 91, 158, 14, 85, 97, 185, 161, 14, 47, 70, 140, 48, 101, 45, 115, 189, 170, 142, 160, 31, 171, 229, 185, 132])
+                )],
+            IdValue.Wynn =>
+                [(
+                    DirectDownloadUri: new Uri("http://wynn.vfo.digital/jUq9U8C45c/WYNN7.0.084-32bit-64bit.exe"),
+                    CdnRelativePath: "wynn/WYNN7.0.084-32bit-64bit.exe",
+                    Filename: "WYNN7.0.084-32bit-64bit.exe",
+                    OptionalChecksum: new IAtodChecksum.Sha256([12, 255, 64, 229, 245, 66, 23, 9, 199, 238, 187, 221, 32, 192, 55, 77, 22, 139, 41, 58, 116, 226, 38, 143, 162, 131, 247, 205, 72, 9, 160, 107])
                 )],
             IdValue.ZoomText =>
                 [(
@@ -1413,6 +1430,23 @@ internal struct KnownApplication
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.QUILLSOFT_WORDQ_5, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.QUILLSOFT_ACAPELA_TTS_FOR_WORDQ_5_CORE, null, RequiresElevation: true),
                         new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.QUILLSOFT_ACAPELA_TTS_FOR_WORDQ_5_NORTH_AMERICA, null, RequiresElevation: true),
+                    ];
+                break;
+            case IdValue.Wynn:
+                result =
+                    [
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_ELEVATION, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_IMPORT_PRINTER_1, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_IMPORT_PRINTER_2, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_IMPORT_PRINTER_3, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_FINE_READER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OMNIPAGE_16, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_OCR_TOMBSTONE_X86, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_USB_CAMERA_DRIVER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_BOOK_SEARCH, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_TEXT_TO_AUDIO, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_DOCUMENT_SERVER, null, RequiresElevation: true),
+                        new IAtodOperation.UninstallUsingWindowsInstaller(KnownApplicationProductCode.FREEDOM_SCIENTIFIC_WYNN_7_0, null, RequiresElevation: true),
                     ];
                 break;
             case IdValue.ZoomText:
